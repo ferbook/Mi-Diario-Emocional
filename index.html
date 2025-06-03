@@ -1,119 +1,108 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mi Diario Emocional</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background-color: #fff7f0;
-      color: #333;
-      margin: 0;
-      padding: 1rem;
-    }
-    h1 {
-      text-align: center;
-      color: #d65a31;
-    }
-    .emotions {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin: 20px 0;
-    }
-    button {
-      padding: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background-color: #ffd9c0;
-      transition: 0.2s;
-    }
-    button:hover {
-      background-color: #ffbb9e;
-    }
-    textarea {
-      width: 100%;
-      height: 80px;
-      margin-top: 15px;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    .log {
-      margin-top: 20px;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 30px;
-      font-style: italic;
-      font-size: 14px;
-      color: #999;
-    }
-    .exportar {
-      margin-top: 20px;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
-  <h1>Mi Diario Emocional</h1>
+<!DOCTYPE html>  <html lang="es">  
+<head>  
+  <meta charset="UTF-8" />  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>  
+  <title>Mi Diario Emocional</title>  
+  <style>  
+    body {  
+      font-family: sans-serif;  
+      background-color: #fff7f0;  
+      color: #333;  
+      margin: 0;  
+      padding: 1rem;  
+    }  
+    h1 {  
+      text-align: center;  
+      color: #d65a31;  
+    }  
+    .emotions {  
+      display: grid;  
+      grid-template-columns: repeat(3, 1fr);  
+      gap: 10px;  
+      margin: 20px 0;  
+    }  
+    button {  
+      padding: 10px;  
+      font-size: 16px;  
+      border: none;  
+      border-radius: 8px;  
+      cursor: pointer;  
+      background-color: #ffd9c0;  
+      transition: 0.2s;  
+    }  
+    button:hover {  
+      background-color: #ffbb9e;  
+    }  
+    textarea {  
+      width: 100%;  
+      height: 80px;  
+      margin-top: 15px;  
+      padding: 10px;  
+      font-size: 16px;  
+      border-radius: 8px;  
+      border: 1px solid #ccc;  
+    }  
+    .log {  
+      margin-top: 20px;  
+    }  
+    .footer {  
+      text-align: center;  
+      margin-top: 30px;  
+      font-style: italic;  
+      font-size: 14px;  
+      color: #999;  
+    }  
+  </style>  
+</head>  
+<body>  
+  <h1>Mi Diario Emocional</h1>    <div class="emotions">  
+    <button onclick="registrar('Feliz 😊')">Feliz 😊</button>  
+    <button onclick="registrar('Triste 😢')">Triste 😢</button>  
+    <button onclick="registrar('Ansioso 😰')">Ansioso 😰</button>  
+    <button onclick="registrar('Irritado 😠')">Irritado 😠</button>  
+    <button onclick="registrar('En paz 🧘')">En paz 🧘</button>  
+    <button onclick="registrar('Motivado 💪')">Motivado 💪</button>  
+  </div>    <textarea id="nota" placeholder="Escribe una nota o reflexión..."></textarea>  <button onclick="guardarNota()">Guardar Nota</button>
 
-  <div class="emotions">
-    <button onclick="registrar('Feliz 😊')">Feliz 😊</button>
-    <button onclick="registrar('Triste 😢')">Triste 😢</button>
-    <button onclick="registrar('Ansioso 😰')">Ansioso 😰</button>
-    <button onclick="registrar('Irritado 😠')">Irritado 😠</button>
-    <button onclick="registrar('En paz 🧘')">En paz 🧘</button>
-    <button onclick="registrar('Motivado 💪')">Motivado 💪</button>
-  </div>
-
-  <textarea id="nota" placeholder="Escribe una nota o reflexión..."></textarea>
-  <button onclick="guardarNota()">Guardar Nota</button>
-
-  <div class="exportar">
-    <button onclick="exportarPDF()">📄 Exportar PDF (último año)</button>
-  </div>
-
-  <div class="log" id="registro"></div>
-
-  <div class="footer">Susurros del Corazón</div>
-
-  <script>
-    const registro = document.getElementById("registro");
-
-    function registrar(emocion) {
-      const ahora = new Date();
-      const hora = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const fecha = ahora.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      const entrada = `${fecha}, ${hora} — ${emocion}`;
-      const div = document.createElement("div");
-      div.textContent = entrada;
-      registro.prepend(div);
-      guardarLocal(entrada);
-    }
-
-    function guardarNota() {
-      const nota = document.getElementById("nota").value;
-      if (!nota.trim()) return;
-      const ahora = new Date();
-      const hora = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const fecha = ahora.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      const entrada = `${fecha}, ${hora} — Nota: ${nota}`;
-      const div = document.createElement("div");
-      div.textContent = entrada;
-      registro.prepend(div);
-      document.getElementById("nota").value = "";
-      guardarLocal(entrada);
-    }
-
-    function guardarLocal(texto) {
-      let datos = JSON.parse(localStorage.getItem("emociones")) || [];
-      datos.unshift(texto);
-      localStorage.setItem("emociones", JSON.stringify(datos));
-    }
-
+  <div class="log" id="registro"></div>    <div class="footer">Susurros del Corazón</div>    <script>  
+    const registro = document.getElementById("registro");  
+  
+    function registrar(emocion) {  
+      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });  
+      const entrada = `${hora} — ${emocion}`;  
+      const div = document.createElement("div");  
+      div.textContent = entrada;  
+      registro.prepend(div);  
+      guardarLocal(entrada);  
+    }  
+  
+    function guardarNota() {  
+      const nota = document.getElementById("nota").value;  
+      if (!nota.trim()) return;  
+      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });  
+      const entrada = `${hora} — Nota: ${nota}`;  
+      const div = document.createElement("div");  
+      div.textContent = entrada;  
+      registro.prepend(div);  
+      document.getElementById("nota").value = "";  
+      guardarLocal(entrada);  
+    }  
+  
+    function guardarLocal(texto) {  
+      let datos = JSON.parse(localStorage.getItem("emociones")) || [];  
+      datos.unshift(texto);  
+      localStorage.setItem("emociones", JSON.stringify(datos));  
+    }  
+  
+    function cargarDatos() {  
+      const datos = JSON.parse(localStorage.getItem("emociones")) || [];  
+      datos.forEach(d => {  
+        const div = document.createElement("div");  
+        div.textContent = d;  
+        registro.appendChild(div);  
+      });  
+    }  
+  
+    cargarDatos();  
+  </script>  </body>  
+</html>
