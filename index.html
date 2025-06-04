@@ -1,108 +1,176 @@
-<!DOCTYPE html>  <html lang="es">  
-<head>  
-  <meta charset="UTF-8" />  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>  
-  <title>Mi Diario Emocional</title>  
-  <style>  
-    body {  
-      font-family: sans-serif;  
-      background-color: #fff7f0;  
-      color: #333;  
-      margin: 0;  
-      padding: 1rem;  
-    }  
-    h1 {  
-      text-align: center;  
-      color: #d65a31;  
-    }  
-    .emotions {  
-      display: grid;  
-      grid-template-columns: repeat(3, 1fr);  
-      gap: 10px;  
-      margin: 20px 0;  
-    }  
-    button {  
-      padding: 10px;  
-      font-size: 16px;  
-      border: none;  
-      border-radius: 8px;  
-      cursor: pointer;  
-      background-color: #ffd9c0;  
-      transition: 0.2s;  
-    }  
-    button:hover {  
-      background-color: #ffbb9e;  
-    }  
-    textarea {  
-      width: 100%;  
-      height: 80px;  
-      margin-top: 15px;  
-      padding: 10px;  
-      font-size: 16px;  
-      border-radius: 8px;  
-      border: 1px solid #ccc;  
-    }  
-    .log {  
-      margin-top: 20px;  
-    }  
-    .footer {  
-      text-align: center;  
-      margin-top: 30px;  
-      font-style: italic;  
-      font-size: 14px;  
-      color: #999;  
-    }  
-  </style>  
-</head>  
-<body>  
-  <h1>Mi Diario Emocional</h1>    <div class="emotions">  
-    <button onclick="registrar('Feliz 😊')">Feliz 😊</button>  
-    <button onclick="registrar('Triste 😢')">Triste 😢</button>  
-    <button onclick="registrar('Ansioso 😰')">Ansioso 😰</button>  
-    <button onclick="registrar('Irritado 😠')">Irritado 😠</button>  
-    <button onclick="registrar('En paz 🧘')">En paz 🧘</button>  
-    <button onclick="registrar('Motivado 💪')">Motivado 💪</button>  
-  </div>    <textarea id="nota" placeholder="Escribe una nota o reflexión..."></textarea>  <button onclick="guardarNota()">Guardar Nota</button>
+!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mi Diario Emocional</title>
+  <style>
+    :root {
+      --color-bg: #fffaf5;
+      --color-principal: #ffb296;
+      --color-hover: #ffa582;
+      --color-texto: #444;
+      --color-texto-secundario: #888;
+      --color-borde: #ffe0d6;
+      --radio: 12px;
+    }
 
-  <div class="log" id="registro"></div>    <div class="footer">Susurros del Corazón</div>    <script>  
-    const registro = document.getElementById("registro");  
-  
-    function registrar(emocion) {  
-      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });  
-      const entrada = `${hora} — ${emocion}`;  
-      const div = document.createElement("div");  
-      div.textContent = entrada;  
-      registro.prepend(div);  
-      guardarLocal(entrada);  
-    }  
-  
-    function guardarNota() {  
-      const nota = document.getElementById("nota").value;  
-      if (!nota.trim()) return;  
-      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });  
-      const entrada = `${hora} — Nota: ${nota}`;  
-      const div = document.createElement("div");  
-      div.textContent = entrada;  
-      registro.prepend(div);  
-      document.getElementById("nota").value = "";  
-      guardarLocal(entrada);  
-    }  
-  
-    function guardarLocal(texto) {  
-      let datos = JSON.parse(localStorage.getItem("emociones")) || [];  
-      datos.unshift(texto);  
-      localStorage.setItem("emociones", JSON.stringify(datos));  
-    }  
-  
-    function cargarDatos() {  
-      const datos = JSON.parse(localStorage.getItem("emociones")) || [];  
-      datos.forEach(d => {  
-        const div = document.createElement("div");  
-        div.textContent = d;  
-        registro.appendChild(div);  
-      });  
-    }  
-  
-    cargarDatos();  
-  </script>  </body>  
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--color-bg);
+      color: var(--color-texto);
+      margin: 0;
+      padding: 1.5rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--color-principal);
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .emotions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .emotions button {
+      padding: 12px;
+      font-size: 16px;
+      background-color: var(--color-principal);
+      border: none;
+      border-radius: var(--radio);
+      cursor: pointer;
+      transition: background-color 0.2s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .emotions button:hover {
+      background-color: var(--color-hover);
+    }
+
+    textarea {
+      width: 100%;
+      height: 90px;
+      margin-top: 15px;
+      padding: 12px;
+      font-size: 15px;
+      border-radius: var(--radio);
+      border: 1px solid var(--color-borde);
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    .save-btn {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      background-color: var(--color-principal);
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      border-radius: var(--radio);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .save-btn:hover {
+      background-color: var(--color-hover);
+    }
+
+    .log {
+      margin-top: 30px;
+      border-top: 1px solid #eee;
+      padding-top: 15px;
+    }
+
+    .log-entry {
+      background-color: #fff;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      border-left: 5px solid var(--color-principal);
+      border-radius: var(--radio);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-style: italic;
+      font-size: 14px;
+      color: var(--color-texto-secundario);
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Mi Diario Emocional</h1>
+
+  <div class="emotions">
+    <button onclick="registrar('Feliz 😊')">Feliz 😊</button>
+    <button onclick="registrar('Triste 😢')">Triste 😢</button>
+    <button onclick="registrar('Ansioso 😰')">Ansioso 😰</button>
+    <button onclick="registrar('Irritado 😠')">Irritado 😠</button>
+    <button onclick="registrar('En paz 🧘')">En paz 🧘</button>
+    <button onclick="registrar('Motivado 💪')">Motivado 💪</button>
+  </div>
+
+  <textarea id="nota" placeholder="Escribe aquí tu nota o reflexión emocional..."></textarea>
+  <button class="save-btn" onclick="guardarNota()">Guardar Nota</button>
+
+  <div class="log" id="registro"></div>
+
+  <div class="footer">Susurros del Corazón</div>
+
+  <script>
+    const registro = document.getElementById("registro");
+
+    function registrar(emocion) {
+      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const entrada = `${hora} — ${emocion}`;
+      mostrarEntrada(entrada);
+      guardarLocal(entrada);
+    }
+
+    function guardarNota() {
+      const nota = document.getElementById("nota").value.trim();
+      if (!nota) return;
+      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const entrada = `${hora} — Nota: ${nota}`;
+      mostrarEntrada(entrada);
+      guardarLocal(entrada);
+      document.getElementById("nota").value = "";
+    }
+
+    function mostrarEntrada(texto) {
+      const div = document.createElement("div");
+      div.textContent = texto;
+      div.className = "log-entry";
+      registro.prepend(div);
+    }
+
+    function guardarLocal(texto) {
+      let datos = JSON.parse(localStorage.getItem("emociones")) || [];
+      datos.unshift(texto);
+      localStorage.setItem("emociones", JSON.stringify(datos));
+    }
+
+    function cargarDatos() {
+      const datos = JSON.parse(localStorage.getItem("emociones")) || [];
+      datos.forEach(d => mostrarEntrada(d));
+    }
+
+    cargarDatos();
+  </script>
+</body>
 </html>
