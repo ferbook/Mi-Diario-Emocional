@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -36,12 +36,19 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      background-color: #ffd9c0;
       transition: 0.2s;
+      font-weight: bold;
     }
     button:hover {
-      background-color: #ffbb9e;
+      opacity: 0.9;
     }
+    .feliz { background-color: #d4ff00; }
+    .triste { background-color: #b280ff; }
+    .ansioso { background-color: #ff8c42; }
+    .irritado { background-color: #ff4d4d; }
+    .enpaz { background-color: #ffffff; border: 1px solid #ccc; }
+    .motivado { background-color: #28a745; color: white; }
+
     textarea {
       width: 100%;
       height: 80px;
@@ -71,12 +78,12 @@
   <h1>Mi Diario Emocional</h1>
   <div class="pregunta">¿Cómo te sientes hoy?</div>
   <div class="emotions">
-    <button onclick="registrar('Feliz 😊')">Feliz 😊</button>
-    <button onclick="registrar('Triste 😢')">Triste 😢</button>
-    <button onclick="registrar('Ansioso 😰')">Ansioso 😰</button>
-    <button onclick="registrar('Irritado 😠')">Irritado 😠</button>
-    <button onclick="registrar('En paz 🧘')">En paz 🧘</button>
-    <button onclick="registrar('Motivado 💪')">Motivado 💪</button>
+    <button class="feliz" onclick="registrar('Feliz 😊')">Feliz 😊</button>
+    <button class="triste" onclick="registrar('Triste 😢')">Triste 😢</button>
+    <button class="ansioso" onclick="registrar('Ansioso 😰')">Ansioso 😰</button>
+    <button class="irritado" onclick="registrar('Irritado 😠')">Irritado 😠</button>
+    <button class="enpaz" onclick="registrar('En paz 🧘')">En paz 🧘</button>
+    <button class="motivado" onclick="registrar('Motivado 💪')">Motivado 💪</button>
   </div>
 
   <textarea id="nota" placeholder="Escribe una nota o reflexión..."></textarea>
@@ -94,7 +101,7 @@
 
     function obtenerFechaActual() {
       const hoy = new Date();
-      return hoy.toISOString().split('T')[0]; // yyyy-mm-dd
+      return hoy.toISOString().split('T')[0];
     }
 
     function registrar(emocion) {
@@ -161,7 +168,16 @@
           datasets: [{
             label: 'Frecuencia emocional',
             data: emociones.map(e => conteo[e]),
-            backgroundColor: '#ffbb9e',
+            backgroundColor: [
+              '#d4ff00', // Feliz
+              '#b280ff', // Triste
+              '#ff8c42', // Ansioso
+              '#ff4d4d', // Irritado
+              '#ffffff', // En paz
+              '#28a745'  // Motivado
+            ],
+            borderColor: '#ccc',
+            borderWidth: 1,
             borderRadius: 8,
           }]
         },
