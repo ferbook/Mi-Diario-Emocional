@@ -4,42 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mi Diario Emocional</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Reset básico para mayor uniformidad */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       background-color: #fff7f0;
       color: #333;
+      margin: 0;
       padding: 1rem;
-      line-height: 1.5;
     }
-
     h1 {
       text-align: center;
       color: #d65a31;
-      margin-bottom: 0.5rem;
     }
-
-    .subtitulo {
+    h2 {
       text-align: center;
-      margin-bottom: 1.5rem;
-      font-size: 1.1rem;
-      color: #444;
+      margin-top: 10px;
+      font-weight: normal;
+      font-size: 1.2rem;
     }
-
     .emotions {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
       gap: 10px;
-      margin-bottom: 1rem;
+      margin: 20px 0;
     }
-
     button {
       padding: 10px;
       font-size: 16px;
@@ -47,32 +36,23 @@
       border-radius: 8px;
       cursor: pointer;
       background-color: #ffd9c0;
-      transition: background-color 0.2s ease;
-      word-wrap: break-word;
+      transition: 0.2s;
     }
-
     button:hover {
       background-color: #ffbb9e;
     }
-
     textarea {
       width: 100%;
-      min-height: 100px;
-      margin: 10px 0;
+      height: 80px;
+      margin-top: 15px;
       padding: 10px;
       font-size: 16px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      resize: vertical;
     }
-
     .log {
       margin-top: 20px;
-      max-height: 300px;
-      overflow-y: auto;
-      padding-right: 10px;
     }
-
     .footer {
       text-align: center;
       margin-top: 30px;
@@ -80,21 +60,15 @@
       font-size: 14px;
       color: #999;
     }
-
     canvas {
       max-width: 100%;
       margin-top: 20px;
-    }
-
-    .chart-container {
-      margin-top: 2rem;
     }
   </style>
 </head>
 <body>
   <h1>Mi Diario Emocional</h1>
-  <p class="subtitulo">¿Cómo te sientes hoy?</p>
-
+  <h2>¿Cómo te sientes hoy?</h2>
   <div class="emotions">
     <button onclick="registrar('Feliz 😊')">Feliz 😊</button>
     <button onclick="registrar('Triste 😢')">Triste 😢</button>
@@ -103,111 +77,118 @@
     <button onclick="registrar('En paz 🧘')">En paz 🧘</button>
     <button onclick="registrar('Motivado 💪')">Motivado 💪</button>
   </div>
-
   <textarea id="nota" placeholder="Escribe una nota o reflexión..."></textarea>
   <button onclick="guardarNota()">Guardar Nota</button>
-  <button onclick="mostrarGrafica()">📉 Ver Gráfica</button>
-
+  <button onclick="mostrarGrafica()">📉 Ver gráfica emocional</button>
+  <canvas id="grafica" style="display:none;"></canvas>
   <div class="log" id="registro"></div>
-  <div class="chart-container">
-    <canvas id="grafica"></canvas>
-  </div>
   <div class="footer">Susurros del Corazón</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const registro = document.getElementById("registro");
-    const emociones = ['Feliz 😊', 'Triste 😢', 'Ansioso 😰', 'Irritado 😠', 'En paz 🧘', 'Motivado 💪'];
 
-    function getHoy() {
-      const d = new Date();
-      return d.toISOString().split('T')[0];
+    function getFecha() {
+      const hoy = new Date();
+      return hoy.toISOString().split('T')[0];
     }
 
     function registrar(emocion) {
+      const fecha = getFecha();
       const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const fecha = getHoy();
       const entrada = `${fecha} ${hora} — ${emocion}`;
-      const div = document.createElement("div");
-      div.textContent = entrada;
-      registro.prepend(div);
-      guardarLocal(fecha, emocion);
+      agregarEntradaVisual(entrada);
+      guardarLocal({ fecha, tipo: 'emocion', valor: emocion });
     }
 
     function guardarNota() {
-      const nota = document.getElementById("nota").value;
-      if (!nota.trim()) return;
+      const nota = document.getElementById("nota").value.trim();
+      if (!nota) return;
+      const fecha = getFecha();
       const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const fecha = getHoy();
       const entrada = `${fecha} ${hora} — Nota: ${nota}`;
-      const div = document.createElement("div");
-      div.textContent = entrada;
-      registro.prepend(div);
+      agregarEntradaVisual(entrada);
+      guardarLocal({ fecha, tipo: 'nota', valor: nota });
       document.getElementById("nota").value = "";
-      guardarLocal(fecha, 'Nota');
     }
 
-    function guardarLocal(fecha, emocion) {
-      let datos = JSON.parse(localStorage.getItem("emocionesPorDia")) || {};
-      if (!datos[fecha]) datos[fecha] = {};
-      datos[fecha][emocion] = (datos[fecha][emocion] || 0) + 1;
-      localStorage.setItem("emocionesPorDia", JSON.stringify(datos));
+    function agregarEntradaVisual(texto) {
+      const div = document.createElement("div");
+      div.textContent = texto;
+      registro.prepend(div);
+    }
+
+    function guardarLocal(objeto) {
+      let datos = JSON.parse(localStorage.getItem("emociones")) || [];
+      datos.push(objeto);
+      localStorage.setItem("emociones", JSON.stringify(datos));
     }
 
     function cargarDatos() {
-      const datos = JSON.parse(localStorage.getItem("emocionesPorDia")) || {};
-      const entradas = [];
-      for (const fecha in datos) {
-        for (const emocion in datos[fecha]) {
-          if (emocion !== 'Nota') {
-            entradas.push(`${fecha} — ${emocion}: ${datos[fecha][emocion]}`);
-          }
-        }
-      }
-      entradas.reverse().forEach(texto => {
-        const div = document.createElement("div");
-        div.textContent = texto;
-        registro.appendChild(div);
+      const datos = JSON.parse(localStorage.getItem("emociones")) || [];
+      datos.forEach(d => {
+        const texto = `${d.fecha} — ${d.tipo === 'nota' ? 'Nota: ' + d.valor : d.valor}`;
+        agregarEntradaVisual(texto);
       });
     }
 
-    function mostrarGrafica() {
-      const datos = JSON.parse(localStorage.getItem("emocionesPorDia")) || {};
-      const fechas = Object.keys(datos);
-      const emocionesPorTipo = {};
-      emociones.forEach(e => emocionesPorTipo[e] = []);
-
-      fechas.forEach(f => {
-        emociones.forEach(e => {
-          emocionesPorTipo[e].push((datos[f] && datos[f][e]) || 0);
-        });
+    function contarEmociones(datos) {
+      const conteo = {};
+      datos.forEach(d => {
+        if (d.tipo === 'emocion') {
+          conteo[d.valor] = (conteo[d.valor] || 0) + 1;
+        }
       });
+      return conteo;
+    }
 
-      const ctx = document.getElementById('grafica').getContext('2d');
-      new Chart(ctx, {
+    function escalarDatos(conteo) {
+      const max = Math.max(...Object.values(conteo));
+      const factor = max > 10 ? 10 / max : 1;
+      const escalado = {};
+      for (let key in conteo) {
+        escalado[key] = Math.round(conteo[key] * factor);
+      }
+      return escalado;
+    }
+
+    function mostrarGrafica() {
+      const canvas = document.getElementById("grafica");
+      canvas.style.display = "block";
+      const datos = JSON.parse(localStorage.getItem("emociones")) || [];
+      const conteo = contarEmociones(datos);
+      const datosEscalados = escalarDatos(conteo);
+
+      const ctx = canvas.getContext('2d');
+      if (window.miGrafica) window.miGrafica.destroy();
+
+      window.miGrafica = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: fechas,
-          datasets: emociones.map(e => ({
-            label: e,
-            data: emocionesPorTipo[e],
-            backgroundColor: 'rgba(' + (~~(Math.random()*255)) + ', ' + (~~(Math.random()*255)) + ', ' + (~~(Math.random()*255)) + ', 0.6)'
-          }))
+          labels: Object.keys(datosEscalados),
+          datasets: [{
+            label: 'Escala emocional (1-10)',
+            data: Object.values(datosEscalados),
+            backgroundColor: [
+              '#f7a072', '#a3c4f3', '#ffcbcb', '#ffd6a5', '#b5ead7', '#d0bdf4'
+            ]
+          }]
         },
         options: {
           responsive: true,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            },
-            title: {
-              display: true,
-              text: 'Resumen emocional por día'
-            }
-          },
           scales: {
             y: {
-              beginAtZero: true
+              beginAtZero: true,
+              max: 10
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.dataset.label || '';
+                  return `${label}: ${context.raw}`;
+                }
+              }
             }
           }
         }
