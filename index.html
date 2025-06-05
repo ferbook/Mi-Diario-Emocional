@@ -53,22 +53,14 @@
       font-size: 14px;
       color: #999;
     }
-    .tools {
-      margin-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    #contador {
-      font-weight: bold;
+    canvas {
+      margin-top: 30px;
+      max-width: 100%;
     }
   </style>
 </head>
 <body>
   <h1>Mi Diario Emocional</h1>
-
-  <label for="fecha">Fecha: </label>
-  <input type="date" id="fecha" />
 
   <div class="emotions">
     <button onclick="registrar('Feliz 😊')">Feliz 😊</button>
@@ -81,25 +73,23 @@
 
   <textarea id="nota" placeholder="Escribe una nota o reflexión..."></textarea>
   <button onclick="guardarNota()">Guardar Nota</button>
+  <button onclick="mostrarGrafica()">📉 Ver Gráfica</button>
 
-  <p id="contador">Entradas registradas: 0</p>
-
-  <div class="tools">
-    <button onclick="exportarDiario()">Exportar Diario (.txt)</button>
-    <button onclick="borrarTodo()" style="background-color: #ffcccc;">Borrar Todo</button>
-  </div>
+  <canvas id="graficaEmociones" style="display:none;" height="200"></canvas>
+  <canvas id="graficaEvolucion" style="display:none;" height="200"></canvas>
 
   <div class="log" id="registro"></div>
-
   <div class="footer">Susurros del Corazón</div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
     const registro = document.getElementById("registro");
 
     function registrar(emocion) {
-      const fecha = document.getElementById("fecha").value || new Date().toLocaleDateString();
       const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const entrada = `${fecha} ${hora} — ${emocion}`;
+      const entrada = `${hora} — ${emocion}`;
       const div = document.createElement("div");
       div.textContent = entrada;
       registro.prepend(div);
@@ -109,9 +99,8 @@
     function guardarNota() {
       const nota = document.getElementById("nota").value;
       if (!nota.trim()) return;
-      const fecha = document.getElementById("fecha").value || new Date().toLocaleDateString();
       const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const entrada = `${fecha} ${hora} — Nota: ${nota}`;
+      const entrada = `${hora} — Nota: ${nota}`;
       const div = document.createElement("div");
       div.textContent = entrada;
       registro.prepend(div);
@@ -123,7 +112,6 @@
       let datos = JSON.parse(localStorage.getItem("emociones")) || [];
       datos.unshift(texto);
       localStorage.setItem("emociones", JSON.stringify(datos));
-      document.getElementById("contador").textContent = `Entradas registradas: ${datos.length}`;
     }
 
     function cargarDatos() {
@@ -133,24 +121,122 @@
         div.textContent = d;
         registro.appendChild(div);
       });
-      document.getElementById("contador").textContent = `Entradas registradas: ${datos.length}`;
     }
 
-    function borrarTodo() {
-      if (confirm("¿Estás seguro de que deseas borrar todas tus entradas?")) {
-        localStorage.removeItem("emociones");
-        registro.innerHTML = "";
-        document.getElementById("contador").textContent = "Entradas registradas: 0";
-      }
-    }
-
-    function exportarDiario() {
+    function contarEmociones() {
       const datos = JSON.parse(localStorage.getItem("emociones")) || [];
-      const blob = new Blob([datos.join("\n")], { type: "text/plain" });
-      const enlace = document.createElement("a");
-      enlace.href = URL.createObjectURL(blob);
-      enlace.download = "mi_diario_emocional.txt";
-      enlace.click();
+      const conteo = {
+        "Feliz 😊": 0,
+        "Triste 😢": 0,
+        "Ansioso 😰": 0,
+        "Irritado 😠": 0,
+        "En paz 🧘": 0,
+        "Motivado 💪": 0
+      };
+      datos.forEach(d => {
+        for (let e in conteo) {
+          if (d.includes(e)) conteo[e]++;
+        }
+      });
+      return conteo;
+    }
+
+    function mostrarGrafica() {
+      const conteo = contarEmociones();
+      const ctx = document.getElementById("graficaEmociones").getContext("2d");
+      document.getElementById("graficaEmociones").style.display = "block";
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(conteo),
+          datasets: [{
+            label: 'Veces que sentiste cada emoción',
+            data: Object.values(conteo),
+            backgroundColor: ['#ffb347', '#ff6961', '#fdfd96', '#f08080', '#77dd77', '#aec6cf'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Frecuencia' }
+            }
+          }
+        }
+      });
+
+      mostrarGraficaEvolucion();
+    }
+
+    function mostrarGraficaEvolucion() {
+      const datos = JSON.parse(localStorage.getItem("emociones")) || [];
+      const valores = {
+        "Motivado 💪": 2,
+        "Feliz 😊": 1,
+        "En paz 🧘": 1,
+        "Triste 😢": -1,
+        "Ansioso 😰": -2,
+        "Irritado 😠": -2
+      };
+
+      const resumenDiario = {};
+
+      datos.forEach(d => {
+        const match = d.match(/^(\d{2}:\d{2}) — (.+)$/);
+        if (match) {
+          const fecha = new Date();
+          const dia = fecha.toLocaleDateString();
+          const emocion = match[2];
+          for (let e in valores) {
+            if (emocion.includes(e)) {
+              if (!resumenDiario[dia]) resumenDiario[dia] = [];
+              resumenDiario[dia].push(valores[e]);
+            }
+          }
+        }
+      });
+
+      const etiquetas = Object.keys(resumenDiario);
+      const puntajes = etiquetas.map(dia => {
+        const suma = resumenDiario[dia].reduce((a, b) => a + b, 0);
+        return (suma / resumenDiario[dia].length).toFixed(2);
+      });
+
+      const ctx2 = document.getElementById("graficaEvolucion").getContext("2d");
+      document.getElementById("graficaEvolucion").style.display = "block";
+
+      new Chart(ctx2, {
+        type: 'line',
+        data: {
+          labels: etiquetas,
+          datasets: [{
+            label: 'Estado emocional promedio del día',
+            data: puntajes,
+            fill: false,
+            borderColor: '#d65a31',
+            tension: 0.3,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#d65a31'
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              min: -2,
+              max: 2,
+              title: {
+                display: true,
+                text: 'Estado emocional (de -2 a +2)'
+              }
+            }
+          }
+        }
+      });
     }
 
     cargarDatos();
