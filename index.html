@@ -1,4 +1,4 @@
-DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -36,18 +36,26 @@ DOCTYPE html>
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      color: #333;
       transition: 0.2s;
-      font-weight: bold;
     }
-    button:hover {
-      opacity: 0.9;
-    }
-    .feliz { background-color: #d4ff00; }
-    .triste { background-color: #b280ff; }
-    .ansioso { background-color: #ff8c42; }
-    .irritado { background-color: #ff4d4d; }
+    .feliz { background-color: #ccff33; }
+    .feliz:hover { background-color: #b3e62d; }
+
+    .triste { background-color: #cba0ff; }
+    .triste:hover { background-color: #b27be6; }
+
+    .ansioso { background-color: #ffc266; }
+    .ansioso:hover { background-color: #ffb347; }
+
+    .irritado { background-color: #ff4d4d; color: white; }
+    .irritado:hover { background-color: #e60000; }
+
     .enpaz { background-color: #ffffff; border: 1px solid #ccc; }
-    .motivado { background-color: #28a745; color: white; }
+    .enpaz:hover { background-color: #f0f0f0; }
+
+    .motivado { background-color: #33cc33; color: white; }
+    .motivado:hover { background-color: #2eb82e; }
 
     textarea {
       width: 100%;
@@ -168,17 +176,10 @@ DOCTYPE html>
           datasets: [{
             label: 'Frecuencia emocional',
             data: emociones.map(e => conteo[e]),
-            backgroundColor: [
-              '#d4ff00', // Feliz
-              '#b280ff', // Triste
-              '#ff8c42', // Ansioso
-              '#ff4d4d', // Irritado
-              '#ffffff', // En paz
-              '#28a745'  // Motivado
-            ],
+            backgroundColor: ['#ccff33', '#cba0ff', '#ffc266', '#ff4d4d', '#ffffff', '#33cc33'],
             borderColor: '#ccc',
             borderWidth: 1,
-            borderRadius: 8,
+            borderRadius: 8
           }]
         },
         options: {
