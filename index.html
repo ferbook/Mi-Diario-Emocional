@@ -2,12 +2,13 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mi Diario Emocional</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: sans-serif;
       background-color: #fff7f0;
       color: #333;
       margin: 0;
@@ -17,15 +18,15 @@
       text-align: center;
       color: #d65a31;
     }
-    h2 {
+    .pregunta {
       text-align: center;
-      margin-top: 10px;
-      font-weight: normal;
       font-size: 1.2rem;
+      margin: 10px 0;
+      font-weight: bold;
     }
     .emotions {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 10px;
       margin: 20px 0;
     }
@@ -61,14 +62,14 @@
       color: #999;
     }
     canvas {
-      max-width: 100%;
       margin-top: 20px;
+      max-width: 100%;
     }
   </style>
 </head>
 <body>
   <h1>Mi Diario Emocional</h1>
-  <h2>¿Cómo te sientes hoy?</h2>
+  <div class="pregunta">¿Cómo te sientes hoy?</div>
   <div class="emotions">
     <button onclick="registrar('Feliz 😊')">Feliz 😊</button>
     <button onclick="registrar('Triste 😢')">Triste 😢</button>
@@ -77,122 +78,132 @@
     <button onclick="registrar('En paz 🧘')">En paz 🧘</button>
     <button onclick="registrar('Motivado 💪')">Motivado 💪</button>
   </div>
+
   <textarea id="nota" placeholder="Escribe una nota o reflexión..."></textarea>
   <button onclick="guardarNota()">Guardar Nota</button>
-  <button onclick="mostrarGrafica()">📉 Ver gráfica emocional</button>
-  <canvas id="grafica" style="display:none;"></canvas>
+  <button onclick="mostrarGrafica()">📉 Ver Gráfica Emocional</button>
+  <button onclick="exportarAPDF()">🧾 Exportar Diario a PDF</button>
+
   <div class="log" id="registro"></div>
+  <canvas id="graficaEmociones" style="display:none;"></canvas>
+
   <div class="footer">Susurros del Corazón</div>
 
   <script>
     const registro = document.getElementById("registro");
 
-    function getFecha() {
+    function obtenerFechaActual() {
       const hoy = new Date();
-      return hoy.toISOString().split('T')[0];
+      return hoy.toISOString().split('T')[0]; // yyyy-mm-dd
     }
 
     function registrar(emocion) {
-      const fecha = getFecha();
+      const fecha = obtenerFechaActual();
       const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const entrada = `${fecha} ${hora} — ${emocion}`;
-      agregarEntradaVisual(entrada);
-      guardarLocal({ fecha, tipo: 'emocion', valor: emocion });
+      const entrada = `${hora} — ${emocion}`;
+      const div = document.createElement("div");
+      div.textContent = `${fecha} — ${entrada}`;
+      registro.prepend(div);
+      guardarLocal(fecha, `Emoción: ${emocion} (${hora})`);
     }
 
     function guardarNota() {
-      const nota = document.getElementById("nota").value.trim();
-      if (!nota) return;
-      const fecha = getFecha();
+      const nota = document.getElementById("nota").value;
+      if (!nota.trim()) return;
+      const fecha = obtenerFechaActual();
       const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const entrada = `${fecha} ${hora} — Nota: ${nota}`;
-      agregarEntradaVisual(entrada);
-      guardarLocal({ fecha, tipo: 'nota', valor: nota });
-      document.getElementById("nota").value = "";
-    }
-
-    function agregarEntradaVisual(texto) {
+      const entrada = `${hora} — Nota: ${nota}`;
       const div = document.createElement("div");
-      div.textContent = texto;
+      div.textContent = `${fecha} — ${entrada}`;
       registro.prepend(div);
+      document.getElementById("nota").value = "";
+      guardarLocal(fecha, `Nota: ${nota} (${hora})`);
     }
 
-    function guardarLocal(objeto) {
-      let datos = JSON.parse(localStorage.getItem("emociones")) || [];
-      datos.push(objeto);
-      localStorage.setItem("emociones", JSON.stringify(datos));
+    function guardarLocal(fecha, texto) {
+      let datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
+      if (!datos[fecha]) datos[fecha] = [];
+      datos[fecha].unshift(texto);
+      localStorage.setItem("emociones_diario", JSON.stringify(datos));
     }
 
     function cargarDatos() {
-      const datos = JSON.parse(localStorage.getItem("emociones")) || [];
-      datos.forEach(d => {
-        const texto = `${d.fecha} — ${d.tipo === 'nota' ? 'Nota: ' + d.valor : d.valor}`;
-        agregarEntradaVisual(texto);
+      const datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
+      Object.keys(datos).reverse().forEach(fecha => {
+        datos[fecha].forEach(d => {
+          const div = document.createElement("div");
+          div.textContent = `${fecha} — ${d}`;
+          registro.appendChild(div);
+        });
       });
-    }
-
-    function contarEmociones(datos) {
-      const conteo = {};
-      datos.forEach(d => {
-        if (d.tipo === 'emocion') {
-          conteo[d.valor] = (conteo[d.valor] || 0) + 1;
-        }
-      });
-      return conteo;
-    }
-
-    function escalarDatos(conteo) {
-      const max = Math.max(...Object.values(conteo));
-      const factor = max > 10 ? 10 / max : 1;
-      const escalado = {};
-      for (let key in conteo) {
-        escalado[key] = Math.round(conteo[key] * factor);
-      }
-      return escalado;
     }
 
     function mostrarGrafica() {
-      const canvas = document.getElementById("grafica");
-      canvas.style.display = "block";
-      const datos = JSON.parse(localStorage.getItem("emociones")) || [];
-      const conteo = contarEmociones(datos);
-      const datosEscalados = escalarDatos(conteo);
+      const datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
+      const emociones = ['Feliz 😊','Triste 😢','Ansioso 😰','Irritado 😠','En paz 🧘','Motivado 💪'];
+      const conteo = {};
+      emociones.forEach(e => conteo[e] = 0);
 
-      const ctx = canvas.getContext('2d');
-      if (window.miGrafica) window.miGrafica.destroy();
+      Object.values(datos).forEach(lista => {
+        lista.forEach(item => {
+          emociones.forEach(e => {
+            if (item.includes(e)) conteo[e]++;
+          });
+        });
+      });
 
-      window.miGrafica = new Chart(ctx, {
+      const ctx = document.getElementById("graficaEmociones").getContext("2d");
+      document.getElementById("graficaEmociones").style.display = "block";
+      new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: Object.keys(datosEscalados),
+          labels: emociones,
           datasets: [{
-            label: 'Escala emocional (1-10)',
-            data: Object.values(datosEscalados),
-            backgroundColor: [
-              '#f7a072', '#a3c4f3', '#ffcbcb', '#ffd6a5', '#b5ead7', '#d0bdf4'
-            ]
+            label: 'Frecuencia emocional',
+            data: emociones.map(e => conteo[e]),
+            backgroundColor: '#ffbb9e',
+            borderRadius: 8,
           }]
         },
         options: {
-          responsive: true,
           scales: {
             y: {
               beginAtZero: true,
-              max: 10
-            }
-          },
-          plugins: {
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const label = context.dataset.label || '';
-                  return `${label}: ${context.raw}`;
-                }
-              }
+              suggestedMax: 10
             }
           }
         }
       });
+    }
+
+    function exportarAPDF() {
+      const datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
+      const contenedor = document.createElement("div");
+      const titulo = document.createElement("h2");
+      titulo.textContent = `Mi Diario Emocional - Exportado ${new Date().toLocaleDateString()}`;
+      titulo.style.textAlign = "center";
+      contenedor.appendChild(titulo);
+
+      Object.keys(datos).forEach(fecha => {
+        const sub = document.createElement("h3");
+        sub.textContent = fecha;
+        contenedor.appendChild(sub);
+        datos[fecha].forEach(item => {
+          const p = document.createElement("p");
+          p.textContent = item;
+          contenedor.appendChild(p);
+        });
+      });
+
+      const opciones = {
+        margin: 0.5,
+        filename: `diario_emocional_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opciones).from(contenedor).save();
     }
 
     cargarDatos();
