@@ -1,9 +1,10 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Mi Diario Emocional</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -53,15 +54,15 @@
       font-size: 14px;
       color: #999;
     }
-    canvas {
-      margin-top: 30px;
-      max-width: 100%;
+    #chartContainer {
+      max-width: 600px;
+      margin: 30px auto;
     }
   </style>
 </head>
 <body>
   <h1>Mi Diario Emocional</h1>
-
+  <h3 style="text-align:center;">¿Cómo te sientes hoy?</h3>
   <div class="emotions">
     <button onclick="registrar('Feliz 😊')">Feliz 😊</button>
     <button onclick="registrar('Triste 😢')">Triste 😢</button>
@@ -70,47 +71,49 @@
     <button onclick="registrar('En paz 🧘')">En paz 🧘</button>
     <button onclick="registrar('Motivado 💪')">Motivado 💪</button>
   </div>
-
   <textarea id="nota" placeholder="Escribe una nota o reflexión..."></textarea>
   <button onclick="guardarNota()">Guardar Nota</button>
-  <button onclick="mostrarGrafica()">📉 Ver Gráfica</button>
+  <button onclick="exportarDatos()">Exportar Todo 📁</button>
+  <button onclick="mostrarGrafica()">📉 Ver Gráfica Emocional</button>
 
-  <canvas id="graficaEmociones" style="display:none;" height="200"></canvas>
-  <canvas id="graficaEvolucion" style="display:none;" height="200"></canvas>
+  <div id="chartContainer" style="display:none">
+    <canvas id="grafica"></canvas>
+  </div>
 
   <div class="log" id="registro"></div>
   <div class="footer">Susurros del Corazón</div>
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
     const registro = document.getElementById("registro");
 
     function registrar(emocion) {
-      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const entrada = `${hora} — ${emocion}`;
+      const hora = new Date();
+      const horaStr = hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const fecha = hora.toLocaleDateString();
+      const entrada = `${fecha} ${horaStr} — ${emocion}`;
       const div = document.createElement("div");
       div.textContent = entrada;
       registro.prepend(div);
-      guardarLocal(entrada);
+      guardarLocal({ fecha, emocion });
     }
 
     function guardarNota() {
       const nota = document.getElementById("nota").value;
       if (!nota.trim()) return;
-      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const entrada = `${hora} — Nota: ${nota}`;
+      const hora = new Date();
+      const horaStr = hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const fecha = hora.toLocaleDateString();
+      const entrada = `${fecha} ${horaStr} — Nota: ${nota}`;
       const div = document.createElement("div");
       div.textContent = entrada;
       registro.prepend(div);
       document.getElementById("nota").value = "";
-      guardarLocal(entrada);
+      guardarLocal({ fecha, emocion: `Nota: ${nota}` });
     }
 
-    function guardarLocal(texto) {
+    function guardarLocal(objeto) {
       let datos = JSON.parse(localStorage.getItem("emociones")) || [];
-      datos.unshift(texto);
+      datos.unshift(objeto);
       localStorage.setItem("emociones", JSON.stringify(datos));
     }
 
@@ -118,122 +121,47 @@
       const datos = JSON.parse(localStorage.getItem("emociones")) || [];
       datos.forEach(d => {
         const div = document.createElement("div");
-        div.textContent = d;
+        div.textContent = `${d.fecha} — ${d.emocion}`;
         registro.appendChild(div);
       });
     }
 
-    function contarEmociones() {
+    function exportarDatos() {
       const datos = JSON.parse(localStorage.getItem("emociones")) || [];
-      const conteo = {
-        "Feliz 😊": 0,
-        "Triste 😢": 0,
-        "Ansioso 😰": 0,
-        "Irritado 😠": 0,
-        "En paz 🧘": 0,
-        "Motivado 💪": 0
-      };
-      datos.forEach(d => {
-        for (let e in conteo) {
-          if (d.includes(e)) conteo[e]++;
-        }
-      });
-      return conteo;
+      let texto = datos.map(d => `${d.fecha} — ${d.emocion}`).join("\n");
+      const blob = new Blob([texto], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "diario_emocional.txt";
+      a.click();
+      URL.revokeObjectURL(url);
     }
 
     function mostrarGrafica() {
-      const conteo = contarEmociones();
-      const ctx = document.getElementById("graficaEmociones").getContext("2d");
-      document.getElementById("graficaEmociones").style.display = "block";
-
+      document.getElementById("chartContainer").style.display = "block";
+      const datos = JSON.parse(localStorage.getItem("emociones")) || [];
+      let conteo = {};
+      datos.forEach(d => {
+        if (!d.emocion.startsWith("Nota")) {
+          conteo[d.emocion] = (conteo[d.emocion] || 0) + 1;
+        }
+      });
+      const ctx = document.getElementById("grafica").getContext("2d");
       new Chart(ctx, {
         type: 'bar',
         data: {
           labels: Object.keys(conteo),
           datasets: [{
-            label: 'Veces que sentiste cada emoción',
+            label: 'Frecuencia emocional',
             data: Object.values(conteo),
-            backgroundColor: ['#ffb347', '#ff6961', '#fdfd96', '#f08080', '#77dd77', '#aec6cf'],
-            borderRadius: 8
+            backgroundColor: '#d65a31',
           }]
         },
         options: {
           responsive: true,
-          plugins: { legend: { display: false } },
           scales: {
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: 'Frecuencia' }
-            }
-          }
-        }
-      });
-
-      mostrarGraficaEvolucion();
-    }
-
-    function mostrarGraficaEvolucion() {
-      const datos = JSON.parse(localStorage.getItem("emociones")) || [];
-      const valores = {
-        "Motivado 💪": 2,
-        "Feliz 😊": 1,
-        "En paz 🧘": 1,
-        "Triste 😢": -1,
-        "Ansioso 😰": -2,
-        "Irritado 😠": -2
-      };
-
-      const resumenDiario = {};
-
-      datos.forEach(d => {
-        const match = d.match(/^(\d{2}:\d{2}) — (.+)$/);
-        if (match) {
-          const fecha = new Date();
-          const dia = fecha.toLocaleDateString();
-          const emocion = match[2];
-          for (let e in valores) {
-            if (emocion.includes(e)) {
-              if (!resumenDiario[dia]) resumenDiario[dia] = [];
-              resumenDiario[dia].push(valores[e]);
-            }
-          }
-        }
-      });
-
-      const etiquetas = Object.keys(resumenDiario);
-      const puntajes = etiquetas.map(dia => {
-        const suma = resumenDiario[dia].reduce((a, b) => a + b, 0);
-        return (suma / resumenDiario[dia].length).toFixed(2);
-      });
-
-      const ctx2 = document.getElementById("graficaEvolucion").getContext("2d");
-      document.getElementById("graficaEvolucion").style.display = "block";
-
-      new Chart(ctx2, {
-        type: 'line',
-        data: {
-          labels: etiquetas,
-          datasets: [{
-            label: 'Estado emocional promedio del día',
-            data: puntajes,
-            fill: false,
-            borderColor: '#d65a31',
-            tension: 0.3,
-            pointBackgroundColor: '#fff',
-            pointBorderColor: '#d65a31'
-          }]
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-              min: -2,
-              max: 2,
-              title: {
-                display: true,
-                text: 'Estado emocional (de -2 a +2)'
-              }
-            }
+            y: { beginAtZero: true }
           }
         }
       });
