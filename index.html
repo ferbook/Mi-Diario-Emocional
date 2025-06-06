@@ -1,204 +1,34 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>¿Cómo te sientes hoy?</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 2rem;
-    }
-    .emotion-button {
-      padding: 10px 20px;
-      margin: 5px;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    .emotion-button.selected {
-      border: 3px solid black;
-    }
-    textarea {
-      width: 90%;
-      height: 100px;
-      margin-top: 20px;
-      font-size: 16px;
-      padding: 10px;
-      border-radius: 6px;
-    }
-    .btn {
-      margin: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-    }
-    .btn.disabled {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lomitos & Emociones</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <div class="container">
+    <div class="header">
+      <h1>Lomitos & Emociones</h1>
+      <p id="fecha"></p>
+    </div>
+    <form id="diario-form">
+      <label for="emociones">¿Cómo te sientes hoy?</label>
+      <select id="emociones" required>
+        <option value="">Selecciona una emoción</option>
+        <option value="feliz">Feliz 🐶</option>
+        <option value="triste">Triste 🐾</option>
+        <option value="cansado">Cansado 💤</option>
+        <option value="ansioso">Ansioso 😰</option>
+        <option value="agradecido">Agradecido 🙏</option>
+      </select>
+      <label for="comentario">Comentario:</label>
+      <textarea id="comentario" placeholder="Escribe aquí tu día..."></textarea>
+      <button type="submit">Guardar</button>
+    </form><div class="historial">
+  <h2>Entradas recientes</h2>
+  <ul id="entradas"></ul>
+</div>
 
-  <h1>¿Cómo te sientes hoy?</h1>
-  <div id="emotion-buttons"></div>
-
-  <textarea id="comment" placeholder="Escribe tu comentario aquí..."></textarea>
-
-  <br />
-  <button id="saveBtn" class="btn disabled" disabled>Guardar Comentario</button>
-  <button onclick="exportToPDF()" class="btn">Exportar a PDF</button>
-  <button onclick="drawChart()" class="btn">Ver Gráfica del Día</button>
-
-  <canvas id="chart" style="max-width: 500px; margin: auto; display: none;"></canvas>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const emotions = [
-      { name: "Feliz", color: "#4CAF50" },
-      { name: "Triste", color: "#2196F3" },
-      { name: "Enojado", color: "#F44336" },
-      { name: "Paciente", color: "#FF9800" },
-      { name: "Ansioso", color: "#9C27B0" },
-      { name: "Irritado", color: "#795548" },
-      { name: "Motivado", color: "#00BCD4" },
-      { name: "Cansado", color: "#607D8B" },
-      { name: "Relajado", color: "#8BC34A" },
-      { name: "Confundido", color: "#E91E63" },
-      { name: "Esperanzado", color: "#FF5722" },
-      { name: "Nervioso", color: "#3F51B5" }
-    ];
-
-    let selectedEmotion = null;
-
-    const buttonsContainer = document.getElementById("emotion-buttons");
-    const saveBtn = document.getElementById("saveBtn");
-    const commentBox = document.getElementById("comment");
-
-    function validateForm() {
-      const comment = commentBox.value.trim();
-      if (selectedEmotion && comment !== "") {
-        saveBtn.disabled = false;
-        saveBtn.classList.remove("disabled");
-      } else {
-        saveBtn.disabled = true;
-        saveBtn.classList.add("disabled");
-      }
-    }
-
-    emotions.forEach(emotion => {
-      const btn = document.createElement("button");
-      btn.textContent = emotion.name;
-      btn.className = "emotion-button";
-      btn.style.backgroundColor = emotion.color;
-      btn.onclick = () => {
-        selectedEmotion = emotion;
-        document.querySelectorAll('.emotion-button').forEach(b => b.classList.remove("selected"));
-        btn.classList.add("selected");
-        validateForm();
-      };
-      buttonsContainer.appendChild(btn);
-    });
-
-    commentBox.addEventListener("input", validateForm);
-
-    function saveEntry() {
-      const comment = commentBox.value.trim();
-      if (!selectedEmotion || comment === "") {
-        alert("Selecciona una emoción y escribe un comentario.");
-        return;
-      }
-
-      const date = new Date();
-      const entry = {
-        emotion: selectedEmotion.name,
-        color: selectedEmotion.color,
-        comment,
-        time: date.toLocaleTimeString(),
-        date: date.toLocaleDateString()
-      };
-
-      const entries = JSON.parse(localStorage.getItem("entries") || "[]");
-      entries.push(entry);
-      localStorage.setItem("entries", JSON.stringify(entries));
-
-      commentBox.value = "";
-      document.querySelectorAll('.emotion-button').forEach(b => b.classList.remove("selected"));
-      selectedEmotion = null;
-      validateForm();
-
-      alert("Comentario guardado.");
-    }
-
-    saveBtn.addEventListener("click", saveEntry);
-
-    function exportToPDF() {
-      const entries = JSON.parse(localStorage.getItem("entries") || "[]");
-      if (entries.length === 0) return alert("No hay comentarios guardados.");
-
-      const doc = new jsPDF();
-      doc.setFontSize(12);
-      doc.text("Registros de emociones", 10, 10);
-
-      let y = 20;
-      entries.forEach((entry, index) => {
-        const line = `${index + 1}. [${entry.date} ${entry.time}] ${entry.emotion}: ${entry.comment}`;
-        doc.text(line, 10, y);
-        y += 10;
-        if (y > 280) {
-          doc.addPage();
-          y = 20;
-        }
-      });
-
-      doc.save("emociones.pdf");
-    }
-
-    function drawChart() {
-      const entries = JSON.parse(localStorage.getItem("entries") || "[]");
-      if (entries.length === 0) return alert("No hay datos para graficar.");
-
-      const chartCanvas = document.getElementById("chart");
-      chartCanvas.style.display = "block";
-
-      const emotionCount = {};
-      entries.forEach(entry => {
-        emotionCount[entry.emotion] = (emotionCount[entry.emotion] || 0) + 1;
-      });
-
-      const ctx = chartCanvas.getContext("2d");
-      if (window.myChart) {
-        window.myChart.destroy();
-      }
-
-      window.myChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: Object.keys(emotionCount),
-          datasets: [{
-            label: "Frecuencia",
-            data: Object.values(emotionCount),
-            backgroundColor: Object.keys(emotionCount).map(emotion => {
-              const found = emotions.find(e => e.name === emotion);
-              return found ? found.color : "#000";
-            })
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
-    }
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-</body>
+  </div>  <script src="script.js"></script></body>
 </html>
