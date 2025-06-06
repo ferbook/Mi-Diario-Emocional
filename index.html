@@ -1,159 +1,221 @@
-<!DOCTYPE html><html lang="es">
+<!DOCTYPE html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Diario Emocional</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registro de Emociones</title>
   <style>
     body {
       font-family: Arial, sans-serif;
+      text-align: center;
       padding: 20px;
     }
+
     h1 {
-      text-align: center;
-    }
-    #emociones {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
+      font-size: 2em;
       margin-bottom: 20px;
     }
-    #emociones button {
-      padding: 10px 15px;
+
+    .emotion-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 15px;
+      gap: 10px;
+    }
+
+    .emotion-buttons button {
+      padding: 10px 20px;
       border: none;
-      border-radius: 5px;
-      color: #fff;
-      font-size: 16px;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
       cursor: pointer;
     }
+
     textarea {
-      width: 100%;
-      padding: 10px;
+      width: 90%;
+      height: 100px;
       margin-bottom: 10px;
       font-size: 16px;
     }
-    .botones {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 10px;
-      flex-wrap: wrap;
+
+    .btn-group {
+      margin-bottom: 20px;
     }
-    #graficaContainer {
-      max-width: 700px;
-      margin: 30px auto;
+
+    .btn-group button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 16px;
+    }
+
+    #log {
+      margin-top: 30px;
+      text-align: left;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      border-top: 2px solid #ccc;
+      padding-top: 20px;
+    }
+
+    .entry {
+      background: #f9f9f9;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+
+    .entry .timestamp {
+      font-size: 0.8em;
+      color: #666;
+    }
+
+    .entry .emotion {
+      font-weight: bold;
+      margin-bottom: 5px;
     }
   </style>
 </head>
 <body>
-  <h1>¿Cómo te sientes hoy?</h1>
-  <div id="emociones"></div>
-  <textarea id="comentario" rows="4" placeholder="Escribe lo que sientes..."></textarea>
-  <div class="botones">
-    <button onclick="guardarComentario()">Guardar Comentario</button>
-    <button onclick="generarPDF()">Exportar a PDF</button>
-    <button onclick="mostrarGrafica()">Ver Gráfica del Día</button>
-  </div>
-  <div id="graficaContainer">
-    <canvas id="grafica"></canvas>
-  </div>  <script>
-    const emocionesDisponibles = [
-      { nombre: 'Feliz', color: '#4caf50' },
-      { nombre: 'Triste', color: '#2196f3' },
-      { nombre: 'Enojado', color: '#f44336' },
-      { nombre: 'Paciente', color: '#ff9800' },
-      { nombre: 'Ansioso', color: '#9c27b0' },
-      { nombre: 'Irritado', color: '#795548' },
-      { nombre: 'Motivado', color: '#00bcd4' },
-      { nombre: 'Cansado', color: '#607d8b' },
-      { nombre: 'Relajado', color: '#8bc34a' },
-      { nombre: 'Confundido', color: '#e91e63' },
-      { nombre: 'Esperanzado', color: '#ff5722' },
-      { nombre: 'Nervioso', color: '#3f51b5' }
-    ];
 
-    const emocionesDiv = document.getElementById("emociones");
-    emocionesDisponibles.forEach(emocion => {
-      const btn = document.createElement("button");
-      btn.textContent = emocion.nombre;
-      btn.style.backgroundColor = emocion.color;
-      btn.onclick = () => guardarEmocion(emocion.nombre);
-      emocionesDiv.appendChild(btn);
+  <h1>¿Cómo te sientes hoy?</h1>
+
+  <div class="emotion-buttons" id="emotions">
+    <button style="background-color: #4CAF50;" data-emotion="Feliz">Feliz</button>
+    <button style="background-color: #2196F3;" data-emotion="Triste">Triste</button>
+    <button style="background-color: #f44336;" data-emotion="Enojado">Enojado</button>
+    <button style="background-color: #FF9800;" data-emotion="Paciente">Paciente</button>
+    <button style="background-color: #9C27B0;" data-emotion="Ansioso">Ansioso</button>
+    <button style="background-color: #795548;" data-emotion="Irritado">Irritado</button>
+    <button style="background-color: #03A9F4;" data-emotion="Motivado">Motivado</button>
+    <button style="background-color: #607D8B;" data-emotion="Cansado">Cansado</button>
+    <button style="background-color: #8BC34A;" data-emotion="Relajado">Relajado</button>
+    <button style="background-color: #E91E63;" data-emotion="Confundido">Confundido</button>
+    <button style="background-color: #FF5722;" data-emotion="Esperanzado">Esperanzado</button>
+    <button style="background-color: #3F51B5;" data-emotion="Nervioso">Nervioso</button>
+  </div>
+
+  <textarea id="comment" placeholder="Escribe tu comentario aquí..."></textarea>
+
+  <div class="btn-group">
+    <button onclick="guardarComentario()">Guardar Comentario</button>
+    <button onclick="exportarPDF()">Exportar a PDF</button>
+    <button onclick="verGrafica()">Ver Gráfica del Día</button>
+  </div>
+
+  <div id="log"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let emocionSeleccionada = null;
+
+    document.querySelectorAll("#emotions button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        emocionSeleccionada = btn.dataset.emotion;
+        alert("Emoción seleccionada: " + emocionSeleccionada);
+      });
     });
 
-    function guardarEmocion(emocion) {
-      const fechaHora = new Date().toLocaleString();
-      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "[]");
-      datos.push({ tipo: "emocion", valor: emocion, fecha: fechaHora });
-      localStorage.setItem("diarioEmocional", JSON.stringify(datos));
-      alert(`Emoción registrada: ${emocion}`);
-    }
-
     function guardarComentario() {
-      const comentario = document.getElementById("comentario").value.trim();
-      if (!comentario) return alert("Por favor escribe un comentario.");
-      const fechaHora = new Date().toLocaleString();
-      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "[]");
-      datos.push({ tipo: "comentario", valor: comentario, fecha: fechaHora });
-      localStorage.setItem("diarioEmocional", JSON.stringify(datos));
-      alert("Comentario guardado.");
-      document.getElementById("comentario").value = "";
+      const comentario = document.getElementById("comment").value.trim();
+      if (!emocionSeleccionada || !comentario) {
+        alert("Por favor selecciona una emoción y escribe un comentario.");
+        return;
+      }
+
+      const ahora = new Date();
+      const timestamp = ahora.toLocaleString();
+      const entrada = { emocion: emocionSeleccionada, comentario, timestamp };
+
+      let registros = JSON.parse(localStorage.getItem("emociones")) || [];
+      registros.push(entrada);
+      localStorage.setItem("emociones", JSON.stringify(registros));
+
+      document.getElementById("comment").value = "";
+      emocionSeleccionada = null;
+      mostrarRegistros();
     }
 
-    function generarPDF() {
-      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "[]");
-      const contenedor = document.createElement("div");
-      datos.forEach(d => {
-        const p = document.createElement("p");
-        p.textContent = `[${d.fecha}] ${d.tipo.toUpperCase()}: ${d.valor}`;
-        contenedor.appendChild(p);
+    function mostrarRegistros() {
+      const contenedor = document.getElementById("log");
+      contenedor.innerHTML = "";
+      const registros = JSON.parse(localStorage.getItem("emociones")) || [];
+
+      registros.slice().reverse().forEach(entry => {
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          <div class="emotion">${entry.emocion}</div>
+          <div>${entry.comentario}</div>
+          <div class="timestamp">${entry.timestamp}</div>
+        `;
+        contenedor.appendChild(div);
       });
-      const opciones = {
-        margin: 0.5,
-        filename: `diario_emocional_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      html2pdf().set(opciones).from(contenedor).save();
     }
 
-    function mostrarGrafica() {
-      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "[]");
-      const hoy = new Date().toLocaleDateString();
-      const emocionesHoy = datos.filter(d => d.tipo === "emocion" && d.fecha.startsWith(hoy));
+    function exportarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const registros = JSON.parse(localStorage.getItem("emociones")) || [];
 
-      const conteo = {};
-      emocionesDisponibles.forEach(e => conteo[e.nombre] = 0);
-      emocionesHoy.forEach(e => conteo[e.valor]++);
-
-      const labels = Object.keys(conteo);
-      const valores = Object.values(conteo);
-      const colores = emocionesDisponibles.map(e => e.color);
-
-      const ctx = document.getElementById('grafica').getContext('2d');
-      if (window.graficaEmociones) window.graficaEmociones.destroy();
-      window.graficaEmociones = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Frecuencia de Emociones Hoy',
-            data: valores,
-            backgroundColor: colores
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
+      doc.text("Registro de Emociones", 10, 10);
+      let y = 20;
+      registros.forEach(r => {
+        doc.text(`[${r.timestamp}] ${r.emocion}: ${r.comentario}`, 10, y);
+        y += 10;
+        if (y > 270) {
+          doc.addPage();
+          y = 10;
         }
       });
+
+      doc.save("registro_emociones.pdf");
     }
-  </script></body>
-  </html>
+
+    function verGrafica() {
+      const registros = JSON.parse(localStorage.getItem("emociones")) || [];
+      const conteo = {};
+
+      registros.forEach(r => {
+        conteo[r.emocion] = (conteo[r.emocion] || 0) + 1;
+      });
+
+      const labels = Object.keys(conteo);
+      const data = Object.values(conteo);
+
+      const graficaVentana = window.open("", "_blank");
+      graficaVentana.document.write(`
+        <html><head><title>Gráfica de Emociones</title></head>
+        <body><canvas id="grafica" width="400" height="400"></canvas>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+          const ctx = document.getElementById('grafica').getContext('2d');
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: ${JSON.stringify(labels)},
+              datasets: [{
+                label: 'Frecuencia de emociones',
+                data: ${JSON.stringify(data)},
+                backgroundColor: ${JSON.stringify(labels.map(() => 'rgba(75, 192, 192, 0.5)'))},
+                borderColor: ${JSON.stringify(labels.map(() => 'rgba(75, 192, 192, 1)'))},
+                borderWidth: 1
+              }]
+            },
+            options: {
+              scales: { y: { beginAtZero: true } }
+            }
+          });
+        </script>
+        </body></html>
+      `);
+    }
+
+    // Mostrar los registros al cargar
+    mostrarRegistros();
+  </script>
+</body>
+</html>
