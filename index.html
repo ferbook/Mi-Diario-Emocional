@@ -6,15 +6,6 @@
   <title>Diario Emocional</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-    }
-
-    h1, h2 {
-      color: #333;
-    }
-
     #emociones button {
       margin: 5px;
       padding: 10px 20px;
@@ -25,28 +16,12 @@
       cursor: pointer;
     }
 
-    button {
-      margin-top: 10px;
-      padding: 8px 16px;
-      border-radius: 6px;
-      border: none;
-      font-size: 15px;
-      background-color: #555;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      opacity: 0.85;
-    }
-
-    /* Colores por emoción */
-    .feliz { background-color: #4caf50; }      /* Verde */
-    .triste { background-color: #2196f3; }     /* Azul */
-    .enojado { background-color: #f44336; }    /* Rojo */
-    .paciente { background-color: #ff9800; }   /* Naranja */
-    .ansioso { background-color: #9c27b0; }    /* Morado */
-    .irritado { background-color: #795548; }   /* Café */
+    .feliz { background-color: #4caf50; }
+    .triste { background-color: #2196f3; }
+    .enojado { background-color: #f44336; }
+    .paciente { background-color: #ff9800; }
+    .ansioso { background-color: #9c27b0; }
+    .irritado { background-color: #795548; }
   </style>
 </head>
 <body>
@@ -63,11 +38,10 @@
   <h2>Comentario:</h2>
   <textarea id="comentario" rows="4" cols="50" placeholder="Escribe lo que sientes..."></textarea><br>
   <button onclick="guardarComentario()">Guardar Comentario</button>
-  <button onclick="mostrarDatos()">Ver Todo</button>
-  <button onclick="verHistorial()">Ver desde 1 de junio hasta hoy</button>
+  <button onclick="mostrarDatos()">Mostrar Datos</button>
   <button onclick="generarPDF()">Guardar PDF</button>
 
-  <div id="grafica" style="margin-top:20px;"></div>
+  <div id="grafica"></div>
 
   <script>
     function guardarEmocion(emocion) {
@@ -85,7 +59,7 @@
       if (!comentario) return alert("Escribe un comentario.");
       const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
       if (!datos[fecha]) datos[fecha] = [];
-      datos[fecha].push(`Comentario: ${comentario}`);
+      datos[fecha].push("Comentario: " + comentario);
       localStorage.setItem("diarioEmocional", JSON.stringify(datos));
       alert("Comentario guardado.");
       document.getElementById("comentario").value = "";
@@ -94,7 +68,7 @@
     function mostrarDatos() {
       const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
       const contenedor = document.getElementById("grafica");
-      contenedor.innerHTML = "<h3>Todos los datos guardados:</h3>";
+      contenedor.innerHTML = "";
       Object.keys(datos).forEach(fecha => {
         const div = document.createElement("div");
         div.innerHTML = `<strong>${fecha}</strong>`;
@@ -110,39 +84,13 @@
     function generarPDF() {
       const contenedor = document.getElementById("grafica");
       const opciones = {
-        margin: 0.5,
-        filename: `diario_emocional_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
+        margin: 1,
+        filename: 'diario_emocional.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
       html2pdf().set(opciones).from(contenedor).save();
-    }
-
-    function verHistorial() {
-      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
-      const contenedor = document.getElementById("grafica");
-      contenedor.innerHTML = "<h3>Datos del 1 de junio al día de hoy:</h3>";
-
-      const desde = new Date(2025, 5, 1); // 1 de junio de 2025 (mes es base 0)
-      const hoy = new Date();
-
-      Object.keys(datos).forEach(fechaStr => {
-        // Formato dd/mm/yyyy
-        const [dia, mes, anio] = fechaStr.split("/").map(n => parseInt(n));
-        const fecha = new Date(anio, mes - 1, dia);
-
-        if (fecha >= desde && fecha <= hoy) {
-          const div = document.createElement("div");
-          div.innerHTML = `<strong>${fechaStr}</strong>`;
-          datos[fechaStr].forEach(item => {
-            const p = document.createElement("p");
-            p.textContent = item;
-            div.appendChild(p);
-          });
-          contenedor.appendChild(div);
-        }
-      });
     }
   </script>
 </body>
