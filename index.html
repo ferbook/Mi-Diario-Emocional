@@ -1,34 +1,116 @@
-<!DOCTYPE html><html lang="es">
+
+<!DOCTYPE html>
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lomitos & Emociones</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="manifest" href="manifest.json">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mis Libros - Susurros del Corazón</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f4f1;
+      color: #333;
+      text-align: center;
+    }
+    header {
+      background: #8e44ad;
+      color: white;
+      padding: 2rem 1rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.2rem;
+    }
+    .portada {
+      max-width: 320px;
+      width: 90%;
+      margin: 1.5rem auto;
+      border-radius: 10px;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    }
+    .libro {
+      background: white;
+      margin: 1.5rem auto;
+      max-width: 600px;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.07);
+      text-align: left;
+    }
+    .libro h2 {
+      margin-top: 0;
+      color: #8e44ad;
+    }
+    .libro p {
+      margin: 0.5rem 0 1rem;
+      font-size: 1rem;
+    }
+    .boton {
+      display: inline-block;
+      padding: 0.7rem 1.4rem;
+      background: #8e44ad;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+    .boton:hover {
+      background: #732d91;
+    }
+    .donar {
+      margin: 2rem 0;
+    }
+    footer {
+      background: #eee;
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>Lomitos & Emociones</h1>
-      <p id="fecha"></p>
-    </div>
-    <form id="diario-form">
-      <label for="emociones">¿Cómo te sientes hoy?</label>
-      <select id="emociones" required>
-        <option value="">Selecciona una emoción</option>
-        <option value="feliz">Feliz 🐶</option>
-        <option value="triste">Triste 🐾</option>
-        <option value="cansado">Cansado 💤</option>
-        <option value="ansioso">Ansioso 😰</option>
-        <option value="agradecido">Agradecido 🙏</option>
-      </select>
-      <label for="comentario">Comentario:</label>
-      <textarea id="comentario" placeholder="Escribe aquí tu día..."></textarea>
-      <button type="submit">Guardar</button>
-    </form><div class="historial">
-  <h2>Entradas recientes</h2>
-  <ul id="entradas"></ul>
-</div>
 
-  </div>  <script src="script.js"></script></body>
+  <header>
+    <h1>📚 Mis Libros · Susurros del Corazón</h1>
+  </header>
+
+  <img src="assets/portada.jpg" alt="Portada" class="portada" />
+
+  <div class="libro">
+    <h2>1. Susurros del Alma</h2>
+    <p>¿Qué harías si descubrieras que el amor más profundo de tu vida ha estado contigo en cada existencia… pero siempre lo olvidas al nacer?</p>
+    <a class="boton" href="https://drive.google.com/file/d/1GF1LXTymT5IRAy9wJoJn9iInYlKzHGzR/view?usp=drivesdk" target="_blank">📥 Descargar</a>
+  </div>
+
+  <div class="libro">
+    <h2>2. Lomitos del Alma</h2>
+    <p>Mi amigo lomito me ayuda en mi ansiedad y depresión.</p>
+    <a class="boton" href="https://docs.google.com/document/d/1FqfHJQ3YH5uSrlAHyEh8MxxEmFKYlHn3/edit?usp=drivesdk" target="_blank">📥 Descargar</a>
+  </div>
+
+  <div class="libro">
+    <h2>3. Guía Ansiedad Mujeres</h2>
+    <p>¿Cómo sobrellevan la ansiedad las mujeres? Una guía clara, real y amorosa.</p>
+    <a class="boton" href="https://drive.google.com/file/d/1FrTQrv7KUsN6OJjPTHjF_xKu_QaZX-cM/view?usp=drivesdk" target="_blank">📥 Descargar</a>
+  </div>
+
+  <div class="libro">
+    <h2>4. Viviendo con Ansiedad y Depresión</h2>
+    <p>Historias reales, experiencias humanas y caminos posibles para sanar.</p>
+    <a class="boton" href="https://drive.google.com/file/d/1FmOCGiB_kEkRq7euikGNalkSB4pYzNCO/view?usp=drivesdk" target="_blank">📥 Descargar</a>
+  </div>
+
+  <div class="donar">
+    <p>¿Te gustaron los libros? Puedes hacer una donación para apoyar este proyecto 💜</p>
+    <a class="boton" href="https://www.paypal.me/FRamirez931" target="_blank">💰 Donar vía PayPal</a>
+  </div>
+
+  <footer>
+    © 2025 · Susurros del Corazón · Hecho con amor por Fernando 🌸
+  </footer>
+
+</body>
 </html>
