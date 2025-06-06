@@ -1,201 +1,105 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Diario Emocional</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f9f9f9;
-    }
-    h2, h3 {
-      color: #333;
-    }
-    button {
-      margin: 5px;
-      padding: 10px 15px;
-      border: none;
-      background-color: #2196f3;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #1976d2;
-    }
-    textarea {
-      width: 100%;
-      height: 80px;
-      margin-top: 10px;
-      padding: 10px;
-      resize: none;
-      font-size: 1em;
-    }
-    #contenedor, #entradaActual {
-      background: #fff;
-      padding: 15px;
-      margin-top: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    #graficaEmociones {
-      margin-top: 40px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-    }
-  </style>
 </head>
 <body>
-
-  <h2>📝 Mi Diario Emocional</h2>
-  <div id="entradaActual">
-    <h3>¿Cómo te sientes hoy?</h3>
-    <div id="emociones">
-      <button onclick="registrarEmocion('Feliz')">😊 Feliz</button>
-      <button onclick="registrarEmocion('Triste')">😢 Triste</button>
-      <button onclick="registrarEmocion('Irritado')">😠 Irritado</button>
-      <button onclick="registrarEmocion('Paciente')">😌 Paciente</button>
-      <button onclick="registrarEmocion('Ansioso')">😰 Ansioso</button>
-    </div>
-    <textarea id="comentario" placeholder="Escribe aquí tu comentario emocional..."></textarea>
-    <button onclick="guardarEntrada()">Guardar Entrada</button>
-    <button onclick="generarInforme()">📄 Generar Informe con Gráfica</button>
+  <h1>¿Cómo te sientes hoy?</h1>
+  <div id="emociones">
+    <button onclick="guardarEmocion('Feliz')">😊 Feliz</button>
+    <button onclick="guardarEmocion('Triste')">😢 Triste</button>
+    <button onclick="guardarEmocion('Enojado')">😠 Enojado</button>
+    <button onclick="guardarEmocion('Paciente')">😌 Paciente</button>
+    <button onclick="guardarEmocion('Ansioso')">😟 Ansioso</button>
+    <button onclick="guardarEmocion('Irritado')">😤 Irritado</button>
   </div>
 
-  <div id="contenedor"></div>
-  <canvas id="graficaEmociones"></canvas>
+  <h2>Comentario:</h2>
+  <textarea id="comentario" rows="4" cols="50" placeholder="Escribe lo que sientes..."></textarea><br>
+  <button onclick="guardarComentario()">Guardar Comentario</button>
+  <button onclick="mostrarDatos()">Ver Gráfica</button>
+  <button onclick="generarPDF()">Guardar PDF</button>
+  <button onclick="verHistorial()">Ver desde 1 de junio hasta hoy</button>
+
+  <div id="grafica" style="margin-top:20px;"></div>
 
   <script>
-    function registrarEmocion(emocion) {
-      document.getElementById("comentario").value = `${emocion} - `;
-    }
+    const emociones = ['Feliz', 'Triste', 'Enojado', 'Paciente', 'Ansioso', 'Irritado'];
 
-    function guardarEntrada() {
-      const comentario = document.getElementById("comentario").value.trim();
-      if (!comentario) {
-        alert("Por favor escribe algo.");
-        return;
-      }
-
-      const fecha = new Date().toISOString().split('T')[0];
-      const datos = JSON.parse(localStorage.getItem("diario_emocional")) || {};
+    function guardarEmocion(emocion) {
+      const fecha = new Date().toLocaleDateString();
+      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
       if (!datos[fecha]) datos[fecha] = [];
-      datos[fecha].push(comentario);
-      localStorage.setItem("diario_emocional", JSON.stringify(datos));
-
-      document.getElementById("comentario").value = "";
-      alert("✅ Entrada guardada.");
+      datos[fecha].push(emocion);
+      localStorage.setItem("diarioEmocional", JSON.stringify(datos));
+      alert(`Guardado: ${emocion}`);
     }
 
-    function generarInforme() {
-      const datos = JSON.parse(localStorage.getItem("diario_emocional")) || {};
-      const contenedor = document.getElementById("contenedor");
-      contenedor.innerHTML = "";
+    function guardarComentario() {
+      const fecha = new Date().toLocaleDateString();
+      const comentario = document.getElementById("comentario").value;
+      if (!comentario) return alert("Escribe un comentario.");
+      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
+      if (!datos[fecha]) datos[fecha] = [];
+      datos[fecha].push(`Comentario: ${comentario}`);
+      localStorage.setItem("diarioEmocional", JSON.stringify(datos));
+      alert("Comentario guardado.");
+      document.getElementById("comentario").value = "";
+    }
 
-      const fechaInicio = new Date("2025-06-01");
-      const fechaHoy = new Date();
-
-      const resumenEmociones = {};
-      const emocionesTotales = {};
-
+    function mostrarDatos() {
+      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
+      const contenedor = document.getElementById("grafica");
+      contenedor.innerHTML = "<h3>Datos Guardados:</h3>";
       Object.keys(datos).forEach(fecha => {
-        const fechaData = new Date(fecha);
-        if (fechaData >= fechaInicio && fechaData <= fechaHoy) {
-          const entrada = datos[fecha];
-          const emocion = entrada[0]?.split(" - ")[0] || "Sin emoción";
-
-          const titulo = document.createElement("h3");
-          titulo.textContent = `📅 ${fecha}`;
-          contenedor.appendChild(titulo);
-
-          entrada.forEach(texto => {
-            const p = document.createElement("p");
-            p.textContent = texto;
-            contenedor.appendChild(p);
-          });
-
-          resumenEmociones[fecha] = emocion;
-          emocionesTotales[emocion] = (emocionesTotales[emocion] || 0) + 1;
-        }
+        const div = document.createElement("div");
+        div.innerHTML = `<strong>${fecha}</strong>`;
+        datos[fecha].forEach(item => {
+          const p = document.createElement("p");
+          p.textContent = item;
+          div.appendChild(p);
+        });
+        contenedor.appendChild(div);
       });
+    }
 
-      // Gráfico
-      const ctx = document.getElementById("graficaEmociones").getContext("2d");
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: Object.keys(emocionesTotales),
-          datasets: [{
-            label: "Frecuencia emocional (desde 1 junio)",
-            data: Object.values(emocionesTotales),
-            backgroundColor: ["#4caf50", "#2196f3", "#ff9800", "#f44336", "#9c27b0"],
-            borderRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            title: {
-              display: true,
-              text: "Resumen de emociones"
-            }
-          }
-        }
-      });
-
-      // Días destacados
-      const emocionesClave = ["Feliz", "Triste", "Irritado", "Paciente", "Ansioso"];
-      const resumenPorEmocion = {};
-      emocionesClave.forEach(emo => {
-        resumenPorEmocion[emo] = Object.entries(resumenEmociones)
-          .filter(([_, e]) => e === emo)
-          .map(([fecha]) => fecha);
-      });
-
-      const resumen = document.createElement("div");
-      resumen.innerHTML = `<h2>📊 Días más destacados:</h2>`;
-      emocionesClave.forEach(emo => {
-        if (resumenPorEmocion[emo].length > 0) {
-          resumen.innerHTML += `<p>🟢 Día(s) más ${emo.toLowerCase()}: <strong>${resumenPorEmocion[emo].join(", ")}</strong></p>`;
-        }
-      });
-      contenedor.appendChild(resumen);
-
-      // Interpretación emocional
-      const emocionDominante = Object.entries(emocionesTotales).sort((a, b) => b[1] - a[1])[0]?.[0];
-      const interpretacion = {
-        "Feliz": "Tu estado emocional más predominante ha sido la **felicidad**. A pesar de los desafíos, estás logrando mantener una perspectiva positiva.",
-        "Triste": "La **tristeza** ha sido frecuente. Tal vez estás atravesando un momento de introspección. Está bien sentir, pero también busca apoyo.",
-        "Irritado": "Has registrado mucha **irritación**. Posiblemente hay estrés acumulado. Tómate pausas y respira profundamente.",
-        "Paciente": "La **paciencia** ha sido tu fuerza. Estás cultivando calma interna, lo cual es una gran señal de evolución emocional.",
-        "Ansioso": "Has sentido bastante **ansiedad**. Considera hablar con alguien, meditar o caminar para calmar tu mente."
+    function generarPDF() {
+      const contenedor = document.getElementById("grafica");
+      const opciones = {
+        margin: 0.5,
+        filename: `diario_emocional_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
+      html2pdf().set(opciones).from(contenedor).save();
+    }
 
-      if (emocionDominante) {
-        const interpretacionDiv = document.createElement("div");
-        interpretacionDiv.innerHTML = `
-          <h2>🧠 Interpretación emocional</h2>
-          <p>${interpretacion[emocionDominante]}</p>
-        `;
-        contenedor.appendChild(interpretacionDiv);
-      }
+    function verHistorial() {
+      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
+      const contenedor = document.getElementById("grafica");
+      contenedor.innerHTML = "<h3>Historial del 1 de junio hasta hoy:</h3>";
 
-      // Guardar PDF
-      setTimeout(() => {
-        const opciones = {
-          margin: 0.5,
-          filename: `diario_emocional_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-        html2pdf().set(opciones).from(document.body).save();
-      }, 1500);
+      const desde = new Date("2025-06-01");
+      const hoy = new Date();
+
+      Object.keys(datos).forEach(fechaStr => {
+        const partes = fechaStr.split("/");
+        const fechaObj = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`); // dd/mm/yyyy
+        if (fechaObj >= desde && fechaObj <= hoy) {
+          const div = document.createElement("div");
+          div.innerHTML = `<strong>${fechaStr}</strong>`;
+          datos[fechaStr].forEach(item => {
+            const p = document.createElement("p");
+            p.textContent = item;
+            div.appendChild(p);
+          });
+          contenedor.appendChild(div);
+        }
+      });
     }
   </script>
 </body>
