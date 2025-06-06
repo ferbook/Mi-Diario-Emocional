@@ -1,116 +1,229 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mis Libros - Susurros del Corazón</title>
+  <title>Mi Diario Emocional</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9f4f1;
+      font-family: sans-serif;
+      background-color: #fff7f0;
       color: #333;
-      text-align: center;
-    }
-    header {
-      background: #8e44ad;
-      color: white;
-      padding: 2rem 1rem;
-    }
-    header h1 {
       margin: 0;
-      font-size: 2.2rem;
+      padding: 1rem;
     }
-    .portada {
-      max-width: 320px;
-      width: 90%;
-      margin: 1.5rem auto;
-      border-radius: 10px;
-      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    h1 {
+      text-align: center;
+      color: #d65a31;
     }
-    .libro {
-      background: white;
-      margin: 1.5rem auto;
-      max-width: 600px;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.07);
-      text-align: left;
+    .pregunta {
+      text-align: center;
+      font-size: 1.2rem;
+      margin: 10px 0;
+      font-weight: bold;
     }
-    .libro h2 {
-      margin-top: 0;
-      color: #8e44ad;
+    .emotions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 20px 0;
     }
-    .libro p {
-      margin: 0.5rem 0 1rem;
-      font-size: 1rem;
-    }
-    .boton {
-      display: inline-block;
-      padding: 0.7rem 1.4rem;
-      background: #8e44ad;
-      color: white;
+    button {
+      padding: 10px;
+      font-size: 16px;
       border: none;
       border-radius: 8px;
-      font-size: 1rem;
-      text-decoration: none;
-      transition: background 0.3s;
+      cursor: pointer;
+      color: #333;
+      transition: 0.2s;
     }
-    .boton:hover {
-      background: #732d91;
+    .feliz { background-color: #ccff33; }
+    .feliz:hover { background-color: #b3e62d; }
+
+    .triste { background-color: #cba0ff; }
+    .triste:hover { background-color: #b27be6; }
+
+    .ansioso { background-color: #ffc266; }
+    .ansioso:hover { background-color: #ffb347; }
+
+    .irritado { background-color: #ff4d4d; color: white; }
+    .irritado:hover { background-color: #e60000; }
+
+    .enpaz { background-color: #ffffff; border: 1px solid #ccc; }
+    .enpaz:hover { background-color: #f0f0f0; }
+
+    .motivado { background-color: #33cc33; color: white; }
+    .motivado:hover { background-color: #2eb82e; }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      margin-top: 15px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
     }
-    .donar {
-      margin: 2rem 0;
+    .log {
+      margin-top: 20px;
     }
-    footer {
-      background: #eee;
-      padding: 1rem;
-      font-size: 0.9rem;
-      color: #666;
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      font-style: italic;
+      font-size: 14px;
+      color: #999;
+    }
+    canvas {
+      margin-top: 20px;
+      max-width: 100%;
     }
   </style>
 </head>
 <body>
-
-  <header>
-    <h1>📚 Mis Libros · Susurros del Corazón</h1>
-  </header>
-
-  <img src="assets/portada.jpg" alt="Portada" class="portada" />
-
-  <div class="libro">
-    <h2>1. Susurros del Alma</h2>
-    <p>¿Qué harías si descubrieras que el amor más profundo de tu vida ha estado contigo en cada existencia… pero siempre lo olvidas al nacer?</p>
-    <a class="boton" href="https://drive.google.com/file/d/1GF1LXTymT5IRAy9wJoJn9iInYlKzHGzR/view?usp=drivesdk" target="_blank">📥 Descargar</a>
+  <h1>Mi Diario Emocional</h1>
+  <div class="pregunta">¿Cómo te sientes hoy?</div>
+  <div class="emotions">
+    <button class="feliz" onclick="registrar('Feliz 😊')">Feliz 😊</button>
+    <button class="triste" onclick="registrar('Triste 😢')">Triste 😢</button>
+    <button class="ansioso" onclick="registrar('Ansioso 😰')">Ansioso 😰</button>
+    <button class="irritado" onclick="registrar('Irritado 😠')">Irritado 😠</button>
+    <button class="enpaz" onclick="registrar('En paz 🧘')">En paz 🧘</button>
+    <button class="motivado" onclick="registrar('Motivado 💪')">Motivado 💪</button>
   </div>
 
-  <div class="libro">
-    <h2>2. Lomitos del Alma</h2>
-    <p>Mi amigo lomito me ayuda en mi ansiedad y depresión.</p>
-    <a class="boton" href="https://docs.google.com/document/d/1FqfHJQ3YH5uSrlAHyEh8MxxEmFKYlHn3/edit?usp=drivesdk" target="_blank">📥 Descargar</a>
-  </div>
+  <textarea id="nota" placeholder="Escribe una nota o reflexión..."></textarea>
+  <button onclick="guardarNota()">Guardar Nota</button>
+  <button onclick="mostrarGrafica()">📉 Ver Gráfica Emocional</button>
+  <button onclick="exportarAPDF()">🧾 Exportar Diario a PDF</button>
 
-  <div class="libro">
-    <h2>3. Guía Ansiedad Mujeres</h2>
-    <p>¿Cómo sobrellevan la ansiedad las mujeres? Una guía clara, real y amorosa.</p>
-    <a class="boton" href="https://drive.google.com/file/d/1FrTQrv7KUsN6OJjPTHjF_xKu_QaZX-cM/view?usp=drivesdk" target="_blank">📥 Descargar</a>
-  </div>
+  <div class="log" id="registro"></div>
+  <canvas id="graficaEmociones" style="display:none;"></canvas>
 
-  <div class="libro">
-    <h2>4. Viviendo con Ansiedad y Depresión</h2>
-    <p>Historias reales, experiencias humanas y caminos posibles para sanar.</p>
-    <a class="boton" href="https://drive.google.com/file/d/1FmOCGiB_kEkRq7euikGNalkSB4pYzNCO/view?usp=drivesdk" target="_blank">📥 Descargar</a>
-  </div>
+  <div class="footer">Susurros del Corazón</div>
 
-  <div class="donar">
-    <p>¿Te gustaron los libros? Puedes hacer una donación para apoyar este proyecto 💜</p>
-    <a class="boton" href="https://www.paypal.me/FRamirez931" target="_blank">💰 Donar vía PayPal</a>
-  </div>
+  <script>
+    const registro = document.getElementById("registro");
 
-  <footer>
-    © 2025 · Susurros del Corazón · Hecho con amor por Fernando 🌸
-  </footer>
+    function obtenerFechaActual() {
+      const hoy = new Date();
+      return hoy.toISOString().split('T')[0];
+    }
 
+    function registrar(emocion) {
+      const fecha = obtenerFechaActual();
+      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const entrada = `${hora} — ${emocion}`;
+      const div = document.createElement("div");
+      div.textContent = `${fecha} — ${entrada}`;
+      registro.prepend(div);
+      guardarLocal(fecha, `Emoción: ${emocion} (${hora})`);
+    }
+
+    function guardarNota() {
+      const nota = document.getElementById("nota").value;
+      if (!nota.trim()) return;
+      const fecha = obtenerFechaActual();
+      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const entrada = `${hora} — Nota: ${nota}`;
+      const div = document.createElement("div");
+      div.textContent = `${fecha} — ${entrada}`;
+      registro.prepend(div);
+      document.getElementById("nota").value = "";
+      guardarLocal(fecha, `Nota: ${nota} (${hora})`);
+    }
+
+    function guardarLocal(fecha, texto) {
+      let datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
+      if (!datos[fecha]) datos[fecha] = [];
+      datos[fecha].unshift(texto);
+      localStorage.setItem("emociones_diario", JSON.stringify(datos));
+    }
+
+    function cargarDatos() {
+      const datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
+      Object.keys(datos).reverse().forEach(fecha => {
+        datos[fecha].forEach(d => {
+          const div = document.createElement("div");
+          div.textContent = `${fecha} — ${d}`;
+          registro.appendChild(div);
+        });
+      });
+    }
+
+    function mostrarGrafica() {
+      const datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
+      const emociones = ['Feliz 😊','Triste 😢','Ansioso 😰','Irritado 😠','En paz 🧘','Motivado 💪'];
+      const conteo = {};
+      emociones.forEach(e => conteo[e] = 0);
+
+      Object.values(datos).forEach(lista => {
+        lista.forEach(item => {
+          emociones.forEach(e => {
+            if (item.includes(e)) conteo[e]++;
+          });
+        });
+      });
+
+      const ctx = document.getElementById("graficaEmociones").getContext("2d");
+      document.getElementById("graficaEmociones").style.display = "block";
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: emociones,
+          datasets: [{
+            label: 'Frecuencia emocional',
+            data: emociones.map(e => conteo[e]),
+            backgroundColor: ['#ccff33', '#cba0ff', '#ffc266', '#ff4d4d', '#ffffff', '#33cc33'],
+            borderColor: '#ccc',
+            borderWidth: 1,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              suggestedMax: 10
+            }
+          }
+        }
+      });
+    }
+
+    function exportarAPDF() {
+      const datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
+      const contenedor = document.createElement("div");
+      const titulo = document.createElement("h2");
+      titulo.textContent = `Mi Diario Emocional - Exportado ${new Date().toLocaleDateString()}`;
+      titulo.style.textAlign = "center";
+      contenedor.appendChild(titulo);
+
+      Object.keys(datos).forEach(fecha => {
+        const sub = document.createElement("h3");
+        sub.textContent = fecha;
+        contenedor.appendChild(sub);
+        datos[fecha].forEach(item => {
+          const p = document.createElement("p");
+          p.textContent = item;
+          contenedor.appendChild(p);
+        });
+      });
+
+      const opciones = {
+        margin: 0.5,
+        filename: `diario_emocional_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opciones).from(contenedor).save();
+    }
+
+    cargarDatos();
+  </script>
 </body>
 </html>
