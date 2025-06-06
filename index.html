@@ -1,128 +1,97 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Diario Emocional</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-  <div id="contenedor"></div>
-  <canvas id="graficaEmociones" style="max-width: 700px; margin-top: 20px;"></canvas>
-
-  <script>
-    function cargarDatos() {
-      const datos = JSON.parse(localStorage.getItem("diario_emocional")) || {};
-      const contenedor = document.getElementById("contenedor");
-
-      const fechaInicio = new Date("2025-06-01");
-      const fechaHoy = new Date();
-
-      const resumenEmociones = {};
-      const emocionesTotales = {};
-
-      Object.keys(datos).forEach(fecha => {
-        const fechaData = new Date(fecha);
-        if (fechaData >= fechaInicio && fechaData <= fechaHoy) {
-          const entrada = datos[fecha];
-          const emocion = entrada[0];
-
-          // Mostrar los datos en el contenedor
-          const titulo = document.createElement("h3");
-          titulo.textContent = `📅 ${fecha}`;
-          contenedor.appendChild(titulo);
-
-          entrada.forEach(texto => {
-            const p = document.createElement("p");
-            p.textContent = texto;
-            contenedor.appendChild(p);
-          });
-
-          // Registrar emoción para resumen
-          resumenEmociones[fecha] = emocion;
-          emocionesTotales[emocion] = (emocionesTotales[emocion] || 0) + 1;
-        }
-      });
-
-      // Crear gráfico
-      const ctx = document.getElementById('graficaEmociones').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(emocionesTotales),
-          datasets: [{
-            label: 'Frecuencia de emociones (junio hasta hoy)',
-            data: Object.values(emocionesTotales),
-            backgroundColor: ['#4caf50', '#2196f3', '#ff9800', '#f44336', '#9c27b0'],
-            borderRadius: 5
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            title: {
-              display: true,
-              text: 'Resumen emocional desde el 1 de junio'
-            }
-          }
-        }
-      });
-
-      // Días destacados
-      const emocionesClave = ["Feliz", "Triste", "Irritado", "Paciente"];
-      const resumenPorEmocion = {};
-
-      emocionesClave.forEach(emocion => {
-        resumenPorEmocion[emocion] = Object.entries(resumenEmociones)
-          .filter(([_, emo]) => emo === emocion)
-          .map(([fecha]) => fecha);
-      });
-
-      const resumen = document.createElement("div");
-      resumen.innerHTML = `<h2>📊 Días más destacados:</h2>`;
-      emocionesClave.forEach(emocion => {
-        if (resumenPorEmocion[emocion].length > 0) {
-          resumen.innerHTML += `<p>🟢 Día(s) más ${emocion.toLowerCase()}: <strong>${resumenPorEmocion[emocion].join(', ')}</strong></p>`;
-        }
-      });
-      contenedor.appendChild(resumen);
-
-      // Interpretación emocional
-      const emocionDominante = Object.entries(emocionesTotales)
-        .sort((a, b) => b[1] - a[1])[0]?.[0];
-
-      const interpretacion = {
-        "Feliz": "Tu estado emocional más predominante ha sido la **felicidad**. A pesar de los desafíos, estás logrando mantener una perspectiva positiva.",
-        "Triste": "La **tristeza** ha sido frecuente en este periodo. Esto puede indicar un proceso interno profundo. Date permiso para sentir y busca apoyo si lo necesitas.",
-        "Irritado": "Has mostrado mucha **irritabilidad**. Tal vez estás atravesando estrés o situaciones que te están sobrecargando. Es momento de poner límites y cuidarte.",
-        "Paciente": "La **paciencia** ha sido tu fuerza. Has logrado mantener la calma y responder con serenidad ante los retos. Eso es un signo de crecimiento emocional.",
-        "Ansioso": "La **ansiedad** ha sido constante. Considera hacer pausas, respirar más conscientemente y hablar con alguien de confianza o un profesional."
-      };
-
-      if (emocionDominante) {
-        const interpretacionDiv = document.createElement("div");
-        interpretacionDiv.innerHTML = `
-          <h2>🧠 Interpretación emocional</h2>
-          <p>${interpretacion[emocionDominante] || "Se detectó una emoción no clasificada. Observa tus registros y trata de nombrarla con más claridad en el futuro."}</p>
-        `;
-        contenedor.appendChild(interpretacionDiv);
-      }
-
-      // Guardar PDF con todo
-      setTimeout(() => {
-        const opciones = {
-          margin: 0.5,
-          filename: `diario_emocional_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-        html2pdf().set(opciones).from(document.body).save();
-      }, 1500);
+  <style>
+    #emociones button {
+      margin: 5px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      color: white;
+      cursor: pointer;
     }
 
-    cargarDatos();
+    .feliz { background-color: #4caf50; }
+    .triste { background-color: #2196f3; }
+    .enojado { background-color: #f44336; }
+    .paciente { background-color: #ff9800; }
+    .ansioso { background-color: #9c27b0; }
+    .irritado { background-color: #795548; }
+  </style>
+</head>
+<body>
+  <h1>¿Cómo te sientes hoy?</h1>
+  <div id="emociones">
+    <button class="feliz" onclick="guardarEmocion('Feliz')">😊 Feliz</button>
+    <button class="triste" onclick="guardarEmocion('Triste')">😢 Triste</button>
+    <button class="enojado" onclick="guardarEmocion('Enojado')">😠 Enojado</button>
+    <button class="paciente" onclick="guardarEmocion('Paciente')">😌 Paciente</button>
+    <button class="ansioso" onclick="guardarEmocion('Ansioso')">😟 Ansioso</button>
+    <button class="irritado" onclick="guardarEmocion('Irritado')">😤 Irritado</button>
+  </div>
+
+  <h2>Comentario:</h2>
+  <textarea id="comentario" rows="4" cols="50" placeholder="Escribe lo que sientes..."></textarea><br>
+  <button onclick="guardarComentario()">Guardar Comentario</button>
+  <button onclick="mostrarDatos()">Mostrar Datos</button>
+  <button onclick="generarPDF()">Guardar PDF</button>
+
+  <div id="grafica"></div>
+
+  <script>
+    function guardarEmocion(emocion) {
+      const fecha = new Date().toLocaleDateString();
+      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
+      if (!datos[fecha]) datos[fecha] = [];
+      datos[fecha].push(emocion);
+      localStorage.setItem("diarioEmocional", JSON.stringify(datos));
+      alert(`Guardado: ${emocion}`);
+    }
+
+    function guardarComentario() {
+      const fecha = new Date().toLocaleDateString();
+      const comentario = document.getElementById("comentario").value.trim();
+      if (!comentario) return alert("Escribe un comentario.");
+      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
+      if (!datos[fecha]) datos[fecha] = [];
+      datos[fecha].push("Comentario: " + comentario);
+      localStorage.setItem("diarioEmocional", JSON.stringify(datos));
+      alert("Comentario guardado.");
+      document.getElementById("comentario").value = "";
+    }
+
+    function mostrarDatos() {
+      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
+      const contenedor = document.getElementById("grafica");
+      contenedor.innerHTML = "";
+      Object.keys(datos).forEach(fecha => {
+        const div = document.createElement("div");
+        div.innerHTML = `<strong>${fecha}</strong>`;
+        datos[fecha].forEach(item => {
+          const p = document.createElement("p");
+          p.textContent = item;
+          div.appendChild(p);
+        });
+        contenedor.appendChild(div);
+      });
+    }
+
+    function generarPDF() {
+      const contenedor = document.getElementById("grafica");
+      const opciones = {
+        margin: 1,
+        filename: 'diario_emocional.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      html2pdf().set(opciones).from(contenedor).save();
+    }
   </script>
 </body>
 </html>
