@@ -1,226 +1,125 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mi Diario Emocional</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <title>Diario Emocional</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background-color: #fff7f0;
-      color: #333;
-      margin: 0;
-      padding: 1rem;
-    }
-    h1 {
-      text-align: center;
-      color: #d65a31;
-    }
-    .pregunta {
-      text-align: center;
-      font-size: 1.2rem;
-      margin: 10px 0;
-      font-weight: bold;
-    }
-    .emotions {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin: 20px 0;
-    }
-    button {
-      padding: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      color: #333;
-      transition: 0.2s;
-    }
-    .feliz { background-color: #ccff33; }
-    .feliz:hover { background-color: #b3e62d; }
-
-    .triste { background-color: #cba0ff; }
-    .triste:hover { background-color: #b27be6; }
-
-    .ansioso { background-color: #ffc266; }
-    .ansioso:hover { background-color: #ffb347; }
-
-    .irritado { background-color: #ff4d4d; color: white; }
-    .irritado:hover { background-color: #e60000; }
-
-    .enpaz { background-color: #ffffff; border: 1px solid #ccc; }
-    .enpaz:hover { background-color: #f0f0f0; }
-
-    .motivado { background-color: #33cc33; color: white; }
-    .motivado:hover { background-color: #2eb82e; }
-
-    textarea {
-      width: 100%;
-      height: 80px;
-      margin-top: 15px;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    .log {
-      margin-top: 20px;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 30px;
-      font-style: italic;
-      font-size: 14px;
-      color: #999;
-    }
-    canvas {
-      margin-top: 20px;
-      max-width: 100%;
-    }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>Mi Diario Emocional</h1>
-  <div class="pregunta">¿Cómo te sientes hoy?</div>
-  <div class="emotions">
-    <button class="feliz" onclick="registrar('Feliz 😊')">Feliz 😊</button>
-    <button class="triste" onclick="registrar('Triste 😢')">Triste 😢</button>
-    <button class="ansioso" onclick="registrar('Ansioso 😰')">Ansioso 😰</button>
-    <button class="irritado" onclick="registrar('Irritado 😠')">Irritado 😠</button>
-    <button class="enpaz" onclick="registrar('En paz 🧘')">En paz 🧘</button>
-    <button class="motivado" onclick="registrar('Motivado 💪')">Motivado 💪</button>
-  </div>
-
-  <textarea id="nota" placeholder="Escribe una nota o reflexión..."></textarea>
-  <button onclick="guardarNota()">Guardar Nota</button>
-  <button onclick="mostrarGrafica()">📉 Ver Gráfica Emocional</button>
-  <button onclick="exportarAPDF()">🧾 Exportar Diario a PDF</button>
-
-  <div class="log" id="registro"></div>
-  <canvas id="graficaEmociones" style="display:none;"></canvas>
-
-  <div class="footer">Susurros del Corazón</div>
+  <div id="contenedor"></div>
+  <canvas id="graficaEmociones" style="max-width: 700px; margin-top: 20px;"></canvas>
 
   <script>
-    const registro = document.getElementById("registro");
-
-    function obtenerFechaActual() {
-      const hoy = new Date();
-      return hoy.toISOString().split('T')[0];
-    }
-
-    function registrar(emocion) {
-      const fecha = obtenerFechaActual();
-      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const entrada = `${hora} — ${emocion}`;
-      const div = document.createElement("div");
-      div.textContent = `${fecha} — ${entrada}`;
-      registro.prepend(div);
-      guardarLocal(fecha, `Emoción: ${emocion} (${hora})`);
-    }
-
-    function guardarNota() {
-      const nota = document.getElementById("nota").value;
-      if (!nota.trim()) return;
-      const fecha = obtenerFechaActual();
-      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const entrada = `${hora} — Nota: ${nota}`;
-      const div = document.createElement("div");
-      div.textContent = `${fecha} — ${entrada}`;
-      registro.prepend(div);
-      document.getElementById("nota").value = "";
-      guardarLocal(fecha, `Nota: ${nota} (${hora})`);
-    }
-
-    function guardarLocal(fecha, texto) {
-      let datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
-      if (!datos[fecha]) datos[fecha] = [];
-      datos[fecha].unshift(texto);
-      localStorage.setItem("emociones_diario", JSON.stringify(datos));
-    }
-
     function cargarDatos() {
-      const datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
-      Object.keys(datos).reverse().forEach(fecha => {
-        datos[fecha].forEach(d => {
-          const div = document.createElement("div");
-          div.textContent = `${fecha} — ${d}`;
-          registro.appendChild(div);
-        });
-      });
-    }
+      const datos = JSON.parse(localStorage.getItem("diario_emocional")) || {};
+      const contenedor = document.getElementById("contenedor");
 
-    function mostrarGrafica() {
-      const datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
-      const emociones = ['Feliz 😊','Triste 😢','Ansioso 😰','Irritado 😠','En paz 🧘','Motivado 💪'];
-      const conteo = {};
-      emociones.forEach(e => conteo[e] = 0);
+      const fechaInicio = new Date("2025-06-01");
+      const fechaHoy = new Date();
 
-      Object.values(datos).forEach(lista => {
-        lista.forEach(item => {
-          emociones.forEach(e => {
-            if (item.includes(e)) conteo[e]++;
+      const resumenEmociones = {};
+      const emocionesTotales = {};
+
+      Object.keys(datos).forEach(fecha => {
+        const fechaData = new Date(fecha);
+        if (fechaData >= fechaInicio && fechaData <= fechaHoy) {
+          const entrada = datos[fecha];
+          const emocion = entrada[0];
+
+          // Mostrar los datos en el contenedor
+          const titulo = document.createElement("h3");
+          titulo.textContent = `📅 ${fecha}`;
+          contenedor.appendChild(titulo);
+
+          entrada.forEach(texto => {
+            const p = document.createElement("p");
+            p.textContent = texto;
+            contenedor.appendChild(p);
           });
-        });
+
+          // Registrar emoción para resumen
+          resumenEmociones[fecha] = emocion;
+          emocionesTotales[emocion] = (emocionesTotales[emocion] || 0) + 1;
+        }
       });
 
-      const ctx = document.getElementById("graficaEmociones").getContext("2d");
-      document.getElementById("graficaEmociones").style.display = "block";
+      // Crear gráfico
+      const ctx = document.getElementById('graficaEmociones').getContext('2d');
       new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: emociones,
+          labels: Object.keys(emocionesTotales),
           datasets: [{
-            label: 'Frecuencia emocional',
-            data: emociones.map(e => conteo[e]),
-            backgroundColor: ['#ccff33', '#cba0ff', '#ffc266', '#ff4d4d', '#ffffff', '#33cc33'],
-            borderColor: '#ccc',
-            borderWidth: 1,
-            borderRadius: 8
+            label: 'Frecuencia de emociones (junio hasta hoy)',
+            data: Object.values(emocionesTotales),
+            backgroundColor: ['#4caf50', '#2196f3', '#ff9800', '#f44336', '#9c27b0'],
+            borderRadius: 5
           }]
         },
         options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-              suggestedMax: 10
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            title: {
+              display: true,
+              text: 'Resumen emocional desde el 1 de junio'
             }
           }
         }
       });
-    }
 
-    function exportarAPDF() {
-      const datos = JSON.parse(localStorage.getItem("emociones_diario")) || {};
-      const contenedor = document.createElement("div");
-      const titulo = document.createElement("h2");
-      titulo.textContent = `Mi Diario Emocional - Exportado ${new Date().toLocaleDateString()}`;
-      titulo.style.textAlign = "center";
-      contenedor.appendChild(titulo);
+      // Días destacados
+      const emocionesClave = ["Feliz", "Triste", "Irritado", "Paciente"];
+      const resumenPorEmocion = {};
 
-      Object.keys(datos).forEach(fecha => {
-        const sub = document.createElement("h3");
-        sub.textContent = fecha;
-        contenedor.appendChild(sub);
-        datos[fecha].forEach(item => {
-          const p = document.createElement("p");
-          p.textContent = item;
-          contenedor.appendChild(p);
-        });
+      emocionesClave.forEach(emocion => {
+        resumenPorEmocion[emocion] = Object.entries(resumenEmociones)
+          .filter(([_, emo]) => emo === emocion)
+          .map(([fecha]) => fecha);
       });
 
-      const opciones = {
-        margin: 0.5,
-        filename: `diario_emocional_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      const resumen = document.createElement("div");
+      resumen.innerHTML = `<h2>📊 Días más destacados:</h2>`;
+      emocionesClave.forEach(emocion => {
+        if (resumenPorEmocion[emocion].length > 0) {
+          resumen.innerHTML += `<p>🟢 Día(s) más ${emocion.toLowerCase()}: <strong>${resumenPorEmocion[emocion].join(', ')}</strong></p>`;
+        }
+      });
+      contenedor.appendChild(resumen);
+
+      // Interpretación emocional
+      const emocionDominante = Object.entries(emocionesTotales)
+        .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+      const interpretacion = {
+        "Feliz": "Tu estado emocional más predominante ha sido la **felicidad**. A pesar de los desafíos, estás logrando mantener una perspectiva positiva.",
+        "Triste": "La **tristeza** ha sido frecuente en este periodo. Esto puede indicar un proceso interno profundo. Date permiso para sentir y busca apoyo si lo necesitas.",
+        "Irritado": "Has mostrado mucha **irritabilidad**. Tal vez estás atravesando estrés o situaciones que te están sobrecargando. Es momento de poner límites y cuidarte.",
+        "Paciente": "La **paciencia** ha sido tu fuerza. Has logrado mantener la calma y responder con serenidad ante los retos. Eso es un signo de crecimiento emocional.",
+        "Ansioso": "La **ansiedad** ha sido constante. Considera hacer pausas, respirar más conscientemente y hablar con alguien de confianza o un profesional."
       };
 
-      html2pdf().set(opciones).from(contenedor).save();
+      if (emocionDominante) {
+        const interpretacionDiv = document.createElement("div");
+        interpretacionDiv.innerHTML = `
+          <h2>🧠 Interpretación emocional</h2>
+          <p>${interpretacion[emocionDominante] || "Se detectó una emoción no clasificada. Observa tus registros y trata de nombrarla con más claridad en el futuro."}</p>
+        `;
+        contenedor.appendChild(interpretacionDiv);
+      }
+
+      // Guardar PDF con todo
+      setTimeout(() => {
+        const opciones = {
+          margin: 0.5,
+          filename: `diario_emocional_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        html2pdf().set(opciones).from(document.body).save();
+      }, 1500);
     }
 
     cargarDatos();
