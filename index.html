@@ -1,97 +1,159 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Diario Emocional</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    #emociones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
     #emociones button {
-      margin: 5px;
-      padding: 10px 20px;
+      padding: 10px 15px;
       border: none;
-      border-radius: 8px;
+      border-radius: 5px;
+      color: #fff;
       font-size: 16px;
-      color: white;
       cursor: pointer;
     }
-
-    .feliz { background-color: #4caf50; }
-    .triste { background-color: #2196f3; }
-    .enojado { background-color: #f44336; }
-    .paciente { background-color: #ff9800; }
-    .ansioso { background-color: #9c27b0; }
-    .irritado { background-color: #795548; }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    .botones {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    #graficaContainer {
+      max-width: 700px;
+      margin: 30px auto;
+    }
   </style>
 </head>
 <body>
   <h1>¿Cómo te sientes hoy?</h1>
-  <div id="emociones">
-    <button class="feliz" onclick="guardarEmocion('Feliz')">😊 Feliz</button>
-    <button class="triste" onclick="guardarEmocion('Triste')">😢 Triste</button>
-    <button class="enojado" onclick="guardarEmocion('Enojado')">😠 Enojado</button>
-    <button class="paciente" onclick="guardarEmocion('Paciente')">😌 Paciente</button>
-    <button class="ansioso" onclick="guardarEmocion('Ansioso')">😟 Ansioso</button>
-    <button class="irritado" onclick="guardarEmocion('Irritado')">😤 Irritado</button>
+  <div id="emociones"></div>
+  <textarea id="comentario" rows="4" placeholder="Escribe lo que sientes..."></textarea>
+  <div class="botones">
+    <button onclick="guardarComentario()">Guardar Comentario</button>
+    <button onclick="generarPDF()">Exportar a PDF</button>
+    <button onclick="mostrarGrafica()">Ver Gráfica del Día</button>
   </div>
+  <div id="graficaContainer">
+    <canvas id="grafica"></canvas>
+  </div>  <script>
+    const emocionesDisponibles = [
+      { nombre: 'Feliz', color: '#4caf50' },
+      { nombre: 'Triste', color: '#2196f3' },
+      { nombre: 'Enojado', color: '#f44336' },
+      { nombre: 'Paciente', color: '#ff9800' },
+      { nombre: 'Ansioso', color: '#9c27b0' },
+      { nombre: 'Irritado', color: '#795548' },
+      { nombre: 'Motivado', color: '#00bcd4' },
+      { nombre: 'Cansado', color: '#607d8b' },
+      { nombre: 'Relajado', color: '#8bc34a' },
+      { nombre: 'Confundido', color: '#e91e63' },
+      { nombre: 'Esperanzado', color: '#ff5722' },
+      { nombre: 'Nervioso', color: '#3f51b5' }
+    ];
 
-  <h2>Comentario:</h2>
-  <textarea id="comentario" rows="4" cols="50" placeholder="Escribe lo que sientes..."></textarea><br>
-  <button onclick="guardarComentario()">Guardar Comentario</button>
-  <button onclick="mostrarDatos()">Mostrar Datos</button>
-  <button onclick="generarPDF()">Guardar PDF</button>
+    const emocionesDiv = document.getElementById("emociones");
+    emocionesDisponibles.forEach(emocion => {
+      const btn = document.createElement("button");
+      btn.textContent = emocion.nombre;
+      btn.style.backgroundColor = emocion.color;
+      btn.onclick = () => guardarEmocion(emocion.nombre);
+      emocionesDiv.appendChild(btn);
+    });
 
-  <div id="grafica"></div>
-
-  <script>
     function guardarEmocion(emocion) {
-      const fecha = new Date().toLocaleDateString();
-      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
-      if (!datos[fecha]) datos[fecha] = [];
-      datos[fecha].push(emocion);
+      const fechaHora = new Date().toLocaleString();
+      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "[]");
+      datos.push({ tipo: "emocion", valor: emocion, fecha: fechaHora });
       localStorage.setItem("diarioEmocional", JSON.stringify(datos));
-      alert(`Guardado: ${emocion}`);
+      alert(`Emoción registrada: ${emocion}`);
     }
 
     function guardarComentario() {
-      const fecha = new Date().toLocaleDateString();
       const comentario = document.getElementById("comentario").value.trim();
-      if (!comentario) return alert("Escribe un comentario.");
-      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
-      if (!datos[fecha]) datos[fecha] = [];
-      datos[fecha].push("Comentario: " + comentario);
+      if (!comentario) return alert("Por favor escribe un comentario.");
+      const fechaHora = new Date().toLocaleString();
+      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "[]");
+      datos.push({ tipo: "comentario", valor: comentario, fecha: fechaHora });
       localStorage.setItem("diarioEmocional", JSON.stringify(datos));
       alert("Comentario guardado.");
       document.getElementById("comentario").value = "";
     }
 
-    function mostrarDatos() {
-      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
-      const contenedor = document.getElementById("grafica");
-      contenedor.innerHTML = "";
-      Object.keys(datos).forEach(fecha => {
-        const div = document.createElement("div");
-        div.innerHTML = `<strong>${fecha}</strong>`;
-        datos[fecha].forEach(item => {
-          const p = document.createElement("p");
-          p.textContent = item;
-          div.appendChild(p);
-        });
-        contenedor.appendChild(div);
-      });
-    }
-
     function generarPDF() {
-      const contenedor = document.getElementById("grafica");
+      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "[]");
+      const contenedor = document.createElement("div");
+      datos.forEach(d => {
+        const p = document.createElement("p");
+        p.textContent = `[${d.fecha}] ${d.tipo.toUpperCase()}: ${d.valor}`;
+        contenedor.appendChild(p);
+      });
       const opciones = {
-        margin: 1,
-        filename: 'diario_emocional.pdf',
+        margin: 0.5,
+        filename: `diario_emocional_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
       html2pdf().set(opciones).from(contenedor).save();
     }
-  </script>
-</body>
-</html>
+
+    function mostrarGrafica() {
+      const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "[]");
+      const hoy = new Date().toLocaleDateString();
+      const emocionesHoy = datos.filter(d => d.tipo === "emocion" && d.fecha.startsWith(hoy));
+
+      const conteo = {};
+      emocionesDisponibles.forEach(e => conteo[e.nombre] = 0);
+      emocionesHoy.forEach(e => conteo[e.valor]++);
+
+      const labels = Object.keys(conteo);
+      const valores = Object.values(conteo);
+      const colores = emocionesDisponibles.map(e => e.color);
+
+      const ctx = document.getElementById('grafica').getContext('2d');
+      if (window.graficaEmociones) window.graficaEmociones.destroy();
+      window.graficaEmociones = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Frecuencia de Emociones Hoy',
+            data: valores,
+            backgroundColor: colores
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+  </script></body>
+  </html>
