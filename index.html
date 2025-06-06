@@ -5,30 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Diario Emocional</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: #333;
+    }
+
+    #emociones button {
+      margin: 5px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      color: white;
+      cursor: pointer;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-size: 15px;
+      background-color: #555;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    /* Colores por emoción */
+    .feliz { background-color: #4caf50; }      /* Verde */
+    .triste { background-color: #2196f3; }     /* Azul */
+    .enojado { background-color: #f44336; }    /* Rojo */
+    .paciente { background-color: #ff9800; }   /* Naranja */
+    .ansioso { background-color: #9c27b0; }    /* Morado */
+    .irritado { background-color: #795548; }   /* Café */
+  </style>
 </head>
 <body>
   <h1>¿Cómo te sientes hoy?</h1>
   <div id="emociones">
-    <button onclick="guardarEmocion('Feliz')">😊 Feliz</button>
-    <button onclick="guardarEmocion('Triste')">😢 Triste</button>
-    <button onclick="guardarEmocion('Enojado')">😠 Enojado</button>
-    <button onclick="guardarEmocion('Paciente')">😌 Paciente</button>
-    <button onclick="guardarEmocion('Ansioso')">😟 Ansioso</button>
-    <button onclick="guardarEmocion('Irritado')">😤 Irritado</button>
+    <button class="feliz" onclick="guardarEmocion('Feliz')">😊 Feliz</button>
+    <button class="triste" onclick="guardarEmocion('Triste')">😢 Triste</button>
+    <button class="enojado" onclick="guardarEmocion('Enojado')">😠 Enojado</button>
+    <button class="paciente" onclick="guardarEmocion('Paciente')">😌 Paciente</button>
+    <button class="ansioso" onclick="guardarEmocion('Ansioso')">😟 Ansioso</button>
+    <button class="irritado" onclick="guardarEmocion('Irritado')">😤 Irritado</button>
   </div>
 
   <h2>Comentario:</h2>
   <textarea id="comentario" rows="4" cols="50" placeholder="Escribe lo que sientes..."></textarea><br>
   <button onclick="guardarComentario()">Guardar Comentario</button>
-  <button onclick="mostrarDatos()">Ver Gráfica</button>
-  <button onclick="generarPDF()">Guardar PDF</button>
+  <button onclick="mostrarDatos()">Ver Todo</button>
   <button onclick="verHistorial()">Ver desde 1 de junio hasta hoy</button>
+  <button onclick="generarPDF()">Guardar PDF</button>
 
   <div id="grafica" style="margin-top:20px;"></div>
 
   <script>
-    const emociones = ['Feliz', 'Triste', 'Enojado', 'Paciente', 'Ansioso', 'Irritado'];
-
     function guardarEmocion(emocion) {
       const fecha = new Date().toLocaleDateString();
       const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
@@ -40,7 +81,7 @@
 
     function guardarComentario() {
       const fecha = new Date().toLocaleDateString();
-      const comentario = document.getElementById("comentario").value;
+      const comentario = document.getElementById("comentario").value.trim();
       if (!comentario) return alert("Escribe un comentario.");
       const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
       if (!datos[fecha]) datos[fecha] = [];
@@ -53,7 +94,7 @@
     function mostrarDatos() {
       const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
       const contenedor = document.getElementById("grafica");
-      contenedor.innerHTML = "<h3>Datos Guardados:</h3>";
+      contenedor.innerHTML = "<h3>Todos los datos guardados:</h3>";
       Object.keys(datos).forEach(fecha => {
         const div = document.createElement("div");
         div.innerHTML = `<strong>${fecha}</strong>`;
@@ -81,15 +122,17 @@
     function verHistorial() {
       const datos = JSON.parse(localStorage.getItem("diarioEmocional") || "{}");
       const contenedor = document.getElementById("grafica");
-      contenedor.innerHTML = "<h3>Historial del 1 de junio hasta hoy:</h3>";
+      contenedor.innerHTML = "<h3>Datos del 1 de junio al día de hoy:</h3>";
 
-      const desde = new Date("2025-06-01");
+      const desde = new Date(2025, 5, 1); // 1 de junio de 2025 (mes es base 0)
       const hoy = new Date();
 
       Object.keys(datos).forEach(fechaStr => {
-        const partes = fechaStr.split("/");
-        const fechaObj = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`); // dd/mm/yyyy
-        if (fechaObj >= desde && fechaObj <= hoy) {
+        // Formato dd/mm/yyyy
+        const [dia, mes, anio] = fechaStr.split("/").map(n => parseInt(n));
+        const fecha = new Date(anio, mes - 1, dia);
+
+        if (fecha >= desde && fecha <= hoy) {
           const div = document.createElement("div");
           div.innerHTML = `<strong>${fechaStr}</strong>`;
           datos[fechaStr].forEach(item => {
