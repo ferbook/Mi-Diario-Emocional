@@ -1,19 +1,100 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Diario Emocional</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+    }
+    h2, h3 {
+      color: #333;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      border: none;
+      background-color: #2196f3;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1976d2;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      margin-top: 10px;
+      padding: 10px;
+      resize: none;
+      font-size: 1em;
+    }
+    #contenedor, #entradaActual {
+      background: #fff;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #graficaEmociones {
+      margin-top: 40px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
+
+  <h2>📝 Mi Diario Emocional</h2>
+  <div id="entradaActual">
+    <h3>¿Cómo te sientes hoy?</h3>
+    <div id="emociones">
+      <button onclick="registrarEmocion('Feliz')">😊 Feliz</button>
+      <button onclick="registrarEmocion('Triste')">😢 Triste</button>
+      <button onclick="registrarEmocion('Irritado')">😠 Irritado</button>
+      <button onclick="registrarEmocion('Paciente')">😌 Paciente</button>
+      <button onclick="registrarEmocion('Ansioso')">😰 Ansioso</button>
+    </div>
+    <textarea id="comentario" placeholder="Escribe aquí tu comentario emocional..."></textarea>
+    <button onclick="guardarEntrada()">Guardar Entrada</button>
+    <button onclick="generarInforme()">📄 Generar Informe con Gráfica</button>
+  </div>
+
   <div id="contenedor"></div>
-  <canvas id="graficaEmociones" style="max-width: 700px; margin-top: 20px;"></canvas>
+  <canvas id="graficaEmociones"></canvas>
 
   <script>
-    function cargarDatos() {
+    function registrarEmocion(emocion) {
+      document.getElementById("comentario").value = `${emocion} - `;
+    }
+
+    function guardarEntrada() {
+      const comentario = document.getElementById("comentario").value.trim();
+      if (!comentario) {
+        alert("Por favor escribe algo.");
+        return;
+      }
+
+      const fecha = new Date().toISOString().split('T')[0];
+      const datos = JSON.parse(localStorage.getItem("diario_emocional")) || {};
+      if (!datos[fecha]) datos[fecha] = [];
+      datos[fecha].push(comentario);
+      localStorage.setItem("diario_emocional", JSON.stringify(datos));
+
+      document.getElementById("comentario").value = "";
+      alert("✅ Entrada guardada.");
+    }
+
+    function generarInforme() {
       const datos = JSON.parse(localStorage.getItem("diario_emocional")) || {};
       const contenedor = document.getElementById("contenedor");
+      contenedor.innerHTML = "";
 
       const fechaInicio = new Date("2025-06-01");
       const fechaHoy = new Date();
@@ -25,9 +106,8 @@
         const fechaData = new Date(fecha);
         if (fechaData >= fechaInicio && fechaData <= fechaHoy) {
           const entrada = datos[fecha];
-          const emocion = entrada[0];
+          const emocion = entrada[0]?.split(" - ")[0] || "Sin emoción";
 
-          // Mostrar los datos en el contenedor
           const titulo = document.createElement("h3");
           titulo.textContent = `📅 ${fecha}`;
           contenedor.appendChild(titulo);
@@ -38,23 +118,22 @@
             contenedor.appendChild(p);
           });
 
-          // Registrar emoción para resumen
           resumenEmociones[fecha] = emocion;
           emocionesTotales[emocion] = (emocionesTotales[emocion] || 0) + 1;
         }
       });
 
-      // Crear gráfico
-      const ctx = document.getElementById('graficaEmociones').getContext('2d');
+      // Gráfico
+      const ctx = document.getElementById("graficaEmociones").getContext("2d");
       new Chart(ctx, {
-        type: 'bar',
+        type: "bar",
         data: {
           labels: Object.keys(emocionesTotales),
           datasets: [{
-            label: 'Frecuencia de emociones (junio hasta hoy)',
+            label: "Frecuencia emocional (desde 1 junio)",
             data: Object.values(emocionesTotales),
-            backgroundColor: ['#4caf50', '#2196f3', '#ff9800', '#f44336', '#9c27b0'],
-            borderRadius: 5
+            backgroundColor: ["#4caf50", "#2196f3", "#ff9800", "#f44336", "#9c27b0"],
+            borderRadius: 6
           }]
         },
         options: {
@@ -63,53 +142,50 @@
             legend: { display: false },
             title: {
               display: true,
-              text: 'Resumen emocional desde el 1 de junio'
+              text: "Resumen de emociones"
             }
           }
         }
       });
 
       // Días destacados
-      const emocionesClave = ["Feliz", "Triste", "Irritado", "Paciente"];
+      const emocionesClave = ["Feliz", "Triste", "Irritado", "Paciente", "Ansioso"];
       const resumenPorEmocion = {};
-
-      emocionesClave.forEach(emocion => {
-        resumenPorEmocion[emocion] = Object.entries(resumenEmociones)
-          .filter(([_, emo]) => emo === emocion)
+      emocionesClave.forEach(emo => {
+        resumenPorEmocion[emo] = Object.entries(resumenEmociones)
+          .filter(([_, e]) => e === emo)
           .map(([fecha]) => fecha);
       });
 
       const resumen = document.createElement("div");
       resumen.innerHTML = `<h2>📊 Días más destacados:</h2>`;
-      emocionesClave.forEach(emocion => {
-        if (resumenPorEmocion[emocion].length > 0) {
-          resumen.innerHTML += `<p>🟢 Día(s) más ${emocion.toLowerCase()}: <strong>${resumenPorEmocion[emocion].join(', ')}</strong></p>`;
+      emocionesClave.forEach(emo => {
+        if (resumenPorEmocion[emo].length > 0) {
+          resumen.innerHTML += `<p>🟢 Día(s) más ${emo.toLowerCase()}: <strong>${resumenPorEmocion[emo].join(", ")}</strong></p>`;
         }
       });
       contenedor.appendChild(resumen);
 
       // Interpretación emocional
-      const emocionDominante = Object.entries(emocionesTotales)
-        .sort((a, b) => b[1] - a[1])[0]?.[0];
-
+      const emocionDominante = Object.entries(emocionesTotales).sort((a, b) => b[1] - a[1])[0]?.[0];
       const interpretacion = {
         "Feliz": "Tu estado emocional más predominante ha sido la **felicidad**. A pesar de los desafíos, estás logrando mantener una perspectiva positiva.",
-        "Triste": "La **tristeza** ha sido frecuente en este periodo. Esto puede indicar un proceso interno profundo. Date permiso para sentir y busca apoyo si lo necesitas.",
-        "Irritado": "Has mostrado mucha **irritabilidad**. Tal vez estás atravesando estrés o situaciones que te están sobrecargando. Es momento de poner límites y cuidarte.",
-        "Paciente": "La **paciencia** ha sido tu fuerza. Has logrado mantener la calma y responder con serenidad ante los retos. Eso es un signo de crecimiento emocional.",
-        "Ansioso": "La **ansiedad** ha sido constante. Considera hacer pausas, respirar más conscientemente y hablar con alguien de confianza o un profesional."
+        "Triste": "La **tristeza** ha sido frecuente. Tal vez estás atravesando un momento de introspección. Está bien sentir, pero también busca apoyo.",
+        "Irritado": "Has registrado mucha **irritación**. Posiblemente hay estrés acumulado. Tómate pausas y respira profundamente.",
+        "Paciente": "La **paciencia** ha sido tu fuerza. Estás cultivando calma interna, lo cual es una gran señal de evolución emocional.",
+        "Ansioso": "Has sentido bastante **ansiedad**. Considera hablar con alguien, meditar o caminar para calmar tu mente."
       };
 
       if (emocionDominante) {
         const interpretacionDiv = document.createElement("div");
         interpretacionDiv.innerHTML = `
           <h2>🧠 Interpretación emocional</h2>
-          <p>${interpretacion[emocionDominante] || "Se detectó una emoción no clasificada. Observa tus registros y trata de nombrarla con más claridad en el futuro."}</p>
+          <p>${interpretacion[emocionDominante]}</p>
         `;
         contenedor.appendChild(interpretacionDiv);
       }
 
-      // Guardar PDF con todo
+      // Guardar PDF
       setTimeout(() => {
         const opciones = {
           margin: 0.5,
@@ -121,8 +197,6 @@
         html2pdf().set(opciones).from(document.body).save();
       }, 1500);
     }
-
-    cargarDatos();
   </script>
 </body>
 </html>
