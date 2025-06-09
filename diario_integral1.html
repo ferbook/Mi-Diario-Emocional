@@ -1,0 +1,131 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Diario Integral</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+      background-color: #f7f2ec;
+      color: #5a4437;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+    }
+    textarea, select, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #c2a469;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .row input {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <h1>SOS Espiritual</h1>
+  <p>Bienvenido a tu espacio de calma y apoyo.</p>
+
+  <h2>¿Cómo te sientes ahora?</h2>
+  <select id="emocion">
+    <option value="">Selecciona una emoción</option>
+    <option value="ansiedad">Ansiedad</option>
+    <option value="tristeza">Tristeza</option>
+    <option value="estres">Estrés</option>
+  </select>
+
+  <h2>Escribe aquí cómo te sientes</h2>
+  <textarea id="diario" placeholder="Escribe tus emociones y pensamientos..."></textarea>
+  <button onclick="guardarEntrada()">Guardar entrada</button>
+  <p id="mensaje"></p>
+
+  <h2>Hora de Sueño</h2>
+  <div class="row">
+    <input type="time" id="horaDormir">
+    <input type="time" id="horaDespertar">
+    <button onclick="registrarSueno()">Registrar sueño</button>
+  </div>
+
+  <h2>Exportar Datos</h2>
+  <button onclick="exportarDatos()">Exportar</button>
+
+  <script>
+    function guardarEntrada() {
+      const emocion = document.getElementById("emocion").value;
+      const diario = document.getElementById("diario").value;
+      const fecha = new Date().toISOString().split("T")[0];
+
+      if (!emocion && !diario.trim()) {
+        document.getElementById("mensaje").innerText = "Escribe algo o selecciona una emoción.";
+        return;
+      }
+
+      const registros = JSON.parse(localStorage.getItem("registros") || "[]");
+      const entrada = {
+        fecha,
+        emocion,
+        diario,
+        dormir: "",
+        despertar: ""
+      };
+      registros.push(entrada);
+      localStorage.setItem("registros", JSON.stringify(registros));
+      document.getElementById("mensaje").innerText = "Guardado correctamente.";
+      document.getElementById("diario").value = "";
+      document.getElementById("emocion").value = "";
+    }
+
+    function registrarSueno() {
+      const dormir = document.getElementById("horaDormir").value;
+      const despertar = document.getElementById("horaDespertar").value;
+      const fecha = new Date().toISOString().split("T")[0];
+      if (!dormir || !despertar) {
+        alert("Ingresa ambas horas.");
+        return;
+      }
+
+      const registros = JSON.parse(localStorage.getItem("registros") || "[]");
+      const entrada = registros.find(r => r.fecha === fecha);
+      if (entrada) {
+        entrada.dormir = dormir;
+        entrada.despertar = despertar;
+      } else {
+        registros.push({ fecha, emocion: "", diario: "", dormir, despertar });
+      }
+      localStorage.setItem("registros", JSON.stringify(registros));
+      alert("Horas de sueño guardadas.");
+    }
+
+    function exportarDatos() {
+      const datos = localStorage.getItem("registros");
+      const blob = new Blob([datos], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "diario_integral_datos.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
